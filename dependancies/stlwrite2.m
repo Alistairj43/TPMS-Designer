@@ -19,6 +19,7 @@ switch event.Source
         plywrite(filename,F,V,rgb);
     otherwise
         filename = "Mesh_Files/"+app.LabelEditField.Value+".stl";
-        stlwrite(filename,F,V);
+        TR = triangulation(F,V);
+        stlwrite(TR,filename,"binary");
 end
 end

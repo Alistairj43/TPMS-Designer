@@ -13,8 +13,8 @@ function [GC, MC, k1, k2, ABS, RMS] = implicitcurvature(TPMS,points)
 % Designed for use in the TPMS Designer Toolbox
 %
 %   Credit: Alistair Jones, 30/09/2021, RMIT University
-
 %% Find Various Properties - Gaussian, Mean, Inclination
+
 syms x y z;
 assume(x,'real'); assume(y,'real'); assume(z,'real');
 
