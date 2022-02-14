@@ -28,6 +28,7 @@ end
 c = sqrt(x.^2+y.^2+z.^2);
 s = surf(ax,x,y,z,c,'FaceColor','interp','EdgeColor','none');
 c=colorbar(ax); c.Label.String = 'Elastic Modulus'; colormap(ax,"jet");
+%caxis(ax,[0 0.2]);
 axis(ax,'manual','vis3d','equal','tight');
 xlabel(ax,"X"); ylabel(ax,"Y"); zlabel(ax,"Z");
 ax.XTick = []; ax.YTick = []; ax.ZTick = [];

@@ -23,7 +23,7 @@ end
 totalA = sum(Aw,'all','omitnan'); %Total per face weighting
 [Vs,Fs] = icosphere(n); %Generate an icosphere with n subdivisions
 ids = dsearchn(Vs,N); %Find which node of the icosphere is closest to the unit normal vector
-Cs = 4*pi*length(Vs)*accumarray(ids,Aw,[length(Vs) 1],@sum,0)/totalA; %Complete cumulative sum normalise by area of sphere and surface
+Cs = 4*pi*length(Vs)*accumarray(ids,Aw,[length(Vs) 1],@sum,0)/totalA+0.001; %Complete cumulative sum normalise by area of sphere and surface
 
 %surf(ax,Fc(:,1),Fc(:,2),Fc(:,3),Cs,'FaceColor','interp','EdgeColor','none')
 h = patch(ax,'Faces',Fs,'Vertices',Vs,'CData',Cs,'FaceColor','interp','EdgeColor','none');
@@ -33,9 +33,10 @@ c=colorbar(ax); c.Label.String = 'Relative Intensity'; colormap(ax,"jet");
 %caxis(ax,prctile(Cs,[0.2 99.8]));
 axis(ax,'manual','vis3d','equal','tight');
 xlabel(ax,"X"); ylabel(ax,"Y"); zlabel(ax,"Z");
-ax.XTick = []; ax.YTick = []; ax.ZTick = [];
+ax.XTick = []; ax.YTick = []; ax.ZTick = []; 
 ax.BoxStyle = 'full'; 
 rotate3d(ax,'on');
+view(ax,62,31); 
 end
 
 function [vv,ff] = icosphere(n)

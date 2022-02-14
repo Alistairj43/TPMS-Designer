@@ -145,7 +145,7 @@ Y=YY(:);
 Z=ZZ(:);
 %draw it all:
 if usealpha
-    hh = trisurf(TT,X,Y,Z,CC,'EdgeAlpha',0.2,'FaceVertexAlphaData',AA,'AlphaDataMapping','direct','FaceAlpha','flat'); 
+    hh = trisurf(TT,X,Y,Z,CC,'EdgeAlpha',0.2,'FaceVertexAlphaData',AA,'AlphaDataMapping','direct','FaceAlpha',1); 
 else
     hh = trisurf(TT,X,Y,Z,CC,'EdgeAlpha',0.2,'FaceAlpha',a); 
 end
