@@ -117,7 +117,7 @@ classdef trimesh
                 
                 normal = normalize(faceNormal(tri3d),2,'norm');
                 p.Nx = normal(:,1); p.Ny = normal(:,2); p.Nz = normal(:,3);
-                p.inclination = 180-real(acosd(p.Nz));
+                p.inclination = real(acosd(p.Nz));
                 p.centroid = incenter(tri3d);
                 v1=[x(tri(:,2))-x(tri(:,1)),y(tri(:,2))-y(tri(:,1)),z(tri(:,2))-z(tri(:,1))];
                 v2=[x(tri(:,3))-x(tri(:,1)),y(tri(:,3))-y(tri(:,1)),z(tri(:,3))-z(tri(:,1))];
@@ -143,9 +143,11 @@ classdef trimesh
                         % more computationally expensive
                         useThird = 1;
                         [vp.GC, vp.MC, vp.k1, vp.k2, vp.RMS, vp.ABS] = patchcurvature(FV.faces,FV.vertices,useThird);
-                    case 'implicit'
-                        %Implicit curvature method - only valid for TPMS
-                        [vp.GC, vp.MC, vp.k1, vp.k2, vp.RMS, vp.ABS] = implicitcurvature(TPMS,FV.vertices);
+%                     case 'implicit'
+%                         %Implicit curvature method - only valid for TPMS
+%                         if ~isdeployed
+%                             [vp.GC, vp.MC, vp.k1, vp.k2, vp.RMS, vp.ABS] = implicitcurvature(TPMS,FV.vertices);
+%                         end
                 end
                 
                 if isfield(vp,'GC')
@@ -192,13 +194,17 @@ classdef trimesh
                 else
                     opts.FaceColor = 'flat';
                 end
+                opts.LineStyle = 'none';
                 opts.LineWidth = 0.001;
                 opts.EdgeAlpha = 0.1;
                 patch(ax,'Faces',FV.faces,'Vertices',FV.vertices,'FaceVertexCData',cData,opts);
                 %xlabel(ax,"X (mm)"); ylabel(ax,"Y (mm)"); zlabel(ax,"Z - Build Direction (mm)");
                 if ~isempty(pName)
                     c=colorbar(ax); c.Label.String = pName; colormap(ax,"jet");
-                    caxis(ax,prctile(cData,[.01 99.90]));
+                    caxisrange = prctile(cData,[0.01 99.99],"all");
+                    caxis(ax,caxisrange); 
+                    ticks = unique(sort([caxisrange(1) get(c, 'YTick') caxisrange(2)]));
+                    set(c, 'YTick', ticks);
                 end
             end
             if isfield(opt,'fancy')&&opt.fancy
@@ -209,10 +215,10 @@ classdef trimesh
                 ax.BoxStyle = 'full';
                 camlight(ax);
                 axis(ax,'manual','vis3d','equal','tight');
-
             end
+            
             if ~isempty(FV.facesC)
-                alpha = 0.8;
+                alpha = 1;
                 hold(ax,"on");
                 patch(ax,'Faces',FV.facesC,'Vertices',FV.verticesC,'FaceColor',[0.2,0.2,0.2],...
                     'FaceAlpha',alpha,'LineStyle','none');
@@ -221,8 +227,29 @@ classdef trimesh
             rotate3d(ax,'on');
 
         end
+
         
-        function F = getField(FV,voxelSize)
+        function writeSTL(FV,filename)
+            % Funtion to convert an FV structure to a Field
+            % inputs:
+            %   voxelSize - desired size of each voxel. default 1.0mm
+            % outputs:
+            %   F - v3Field object based on the distance-field of the trimesh object
+            arguments
+                FV;
+                filename string = "TPMSObject.stl";
+            end
+            if isempty(FV.facesC)
+                tri=triangulation(FV.faces,FV.vertices);
+            else
+                tri=triangulation([FV.faces; FV.facesC+length(FV.vertices)],[FV.vertices; FV.verticesC]);
+            end
+            
+            stlwrite(tri,filename,"binary");
+            
+        end
+
+        function F = getField(FV, voxelSize)
             % Funtion to convert an FV structure to a Field
             % inputs:
             %   voxelSize - desired size of each voxel. default 1.0mm

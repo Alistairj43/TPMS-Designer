@@ -119,10 +119,10 @@ classdef v3Field
             %homogenise the unit cell using periodic boundary conditions
             arguments
                 F;
-                E1 (1,1) double = 1; % Elastic Modulus solid
-                v1 (1,1) double = 0.33; % Poisson's Ratio solid
-                E2 (1,1) double = 0; % Elastic Modulus secondary
-                v2 (1,1) double = 0; % Poisson's Ratio secondary
+                E1 (1,1) double = 1.053; % Elastic Modulus solid
+                v1 (1,1) double = 1/3; % Poisson's Ratio solid
+                E2 (1,1) double = 858; % Elastic Modulus secondary
+                v2 (1,1) double = 1/3; % Poisson's Ratio secondary
             end
 
             lambda1 = E1*v1/((1+v1)*(1-2*v1));
@@ -130,7 +130,7 @@ classdef v3Field
             lambda2 = E2*v2/((1+v2)*(1-2*v2));
             mu2 = E2/(2+2*v2);
             try
-                F.CH = homo3D(F.upper(1),F.upper(2),F.upper(3),lambda1,mu1,lambda2,mu2,F.solid);
+                F.CH = homo3D(F.upper(1),F.upper(2),F.upper(3),lambda1,mu1,lambda2,mu2,F.property.solid);
             catch % If homogenisation fails return NaNs
                 F.CH = NaN(6,6);
             end
@@ -182,9 +182,11 @@ classdef v3Field
                 caxis(ax,'manual');
             else
                 %Voxelated
-                cData = cData+F.solid*1i;
+                cData = F.property.solid;
                 [h,~,~,~,~,~,~] = voxelSurf(cData,false);
             end
+
+            
         end
     end
 end

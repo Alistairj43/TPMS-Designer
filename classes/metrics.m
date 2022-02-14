@@ -44,6 +44,8 @@ classdef metrics
         areaVar
         areaMean
         areaStd
+        areaMin
+        areaMax
                 
         areaBelow30deg
         LpbfRa_Max
@@ -102,15 +104,17 @@ classdef metrics
                 E(4) = 1/S(4,4);
                 E(5) = 1/S(5,5);
                 E(6) = 1/S(6,6);
-                M.elastic = mean(E(1:3));
+                M.elastic = E(1);
                 M.shear = mean(E(4:6));
                 M.poisson = -S(1,2)*E(1);
                 M.totalStiffness = M.elastic+2*M.shear*(1-M.poisson);
-                M.zenerRatio = 2*F.CH(4,4)/(F.CH(1,1)-F.CH(1,2));
+                M.zenerRatio = 2*(1+M.poisson)*M.shear/M.elastic;%2*F.CH(4,4)/(F.CH(1,1)-F.CH(1,2));
             end
             M.areaMean = mean(F.zSlices.area);
             M.areaStd = std(F.zSlices.area);
             M.areaVar = var(F.zSlices.area);
+            M.areaMin = min(F.zSlices.area,[],'all');
+            M.areaMax = max(F.zSlices.area,[],'all');
             M.thickness = mean(F.zSlices.thickness);
             temp = bwdist(padarray(F.property.solid,F.res,'circular'));
             M.poreDiameter = (F.xq(2)-F.xq(1))*max(temp,[],'all');
