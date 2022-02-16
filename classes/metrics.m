@@ -7,7 +7,7 @@ classdef metrics
     %   M = metrics(); - create and returns an empty metrics object 'M'
     %
     %   M = fvMetrics(FV); - calculate and updates metrics based on the
-    %         properties of a trimesh FV
+    %         properties of a surfaceMesh FV
     %
     %   M = mechanicalMetrics(F);  - calcualte the mechanical metrics
     %           from a field-based representation "F" - (requires homogenisation).

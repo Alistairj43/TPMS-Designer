@@ -4,7 +4,7 @@ classdef TPMS
     %   TPMS can be parametrically defined using an equation, type,
     %   isovalue/volume fraction, resolution, cell size, number of cells,
     %   rotation system, and phase offset.
-    %TPMS has methods to convert the implicit form into a trimesh object, a
+    %TPMS has methods to convert the implicit form into a surfaceMesh object, a
     %v3field object, and to populate a metrics object.
     %TPMS also accesses methods for visualising the resulting data
     %structures
@@ -135,7 +135,7 @@ classdef TPMS
             arguments
                 TPMS;
                 ax = [];
-                plottype string = "trimesh";
+                plottype string = "surfaceMesh";
                 property1 string = "inclination Angle (deg)";
                 property2 string = "gaussian curvature (mm^-^2)";
                 opts = [];
@@ -147,7 +147,7 @@ classdef TPMS
             end
             
             switch plottype
-                case "trimesh"
+                case "surfaceMesh"
                     h = TPMS.FV.plotMesh(property1,opts,ax);
                 case "voxel"
                     h = TPMS.F.plotField(property1,"voxels",ax);
@@ -185,7 +185,7 @@ classdef TPMS
                 TPMS.M = metrics;
             end
             if isempty(TPMS.FV)
-                TPMS.FV = trimesh('v3field',TPMS.F);
+                TPMS.FV = surfaceMesh('v3field',TPMS.F);
             end
             
             if usefield||mechanical

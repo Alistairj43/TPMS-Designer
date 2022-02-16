@@ -1,6 +1,6 @@
 classdef v3Field
     %v3Field is a class to deal with 3D volume data
-    %   v3Fields can be created from an implicit function, trimesh, or
+    %   v3Fields can be created from an implicit function, surfaceMesh, or
     %   lattice structure (defined by the nodes and struts).
     %
     %   The v3Field class comes with visualisation options to look at a
