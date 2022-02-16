@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration file="F:\PhD\OneDrive - RMIT University\MATLAB\TPMS_Designer\V2.2\TPMS Designer.prj" location="F:\PhD\OneDrive - RMIT University\MATLAB\TPMS_Designer\V2.2" name="TPMS Designer" target="target.toolbox" target-name="Package Toolbox">
+  <configuration file="F:\PhD\OneDrive - RMIT University\MATLAB\TPMS_Designer\V2.2.1.0\TPMS Designer.prj" location="F:\PhD\OneDrive - RMIT University\MATLAB\TPMS_Designer\V2.2.1.0" name="TPMS Designer" target="target.toolbox" target-name="Package Toolbox">
     <param.appname>TPMS Designer</param.appname>
     <param.authnamewatermark>Alistair Jones</param.authnamewatermark>
     <param.email>s3749474@student.rmit.edu.au</param.email>
@@ -15,7 +15,25 @@ A stand-alone application can be found in the application folder.</param.descrip
     <param.products.version />
     <param.platforms />
     <param.guid>21d021c7-68ca-4297-9a82-efe6f02076c1</param.guid>
-    <param.exclude.filters />
+    <param.exclude.filters>% List files contained in your toolbox folder that you would like to exclude
+% from packaging.  Excludes should be listed relative to the toolbox folder.
+% Some examples of how to specify excludes are provided below:
+%
+% A single file in the toolbox folder:
+% .svn
+%
+% A single file in a subfolder of the toolbox folder:
+% example/.svn
+%
+% All files in a subfolder of the toolbox folder:
+Application/
+%
+% All files of a certain name in all subfolders of the toolbox folder:
+% **/.svn
+%
+% All files matching a pattern in all subfolders of the toolbox folder:
+% **/*.bak
+%</param.exclude.filters>
     <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
     <param.examples />
     <param.demosxml />
@@ -27,9 +45,17 @@ A stand-alone application can be found in the application folder.</param.descrip
     </param.registered.apps>
     <param.docs />
     <param.getting.started.guide>${PROJECT_ROOT}\doc\GettingStarted.mlx</param.getting.started.guide>
-    <param.matlabpath.excludes />
+    <param.matlabpath.excludes>
+      <item>/Application/TPMSDesigner_resources</item>
+      <item>/Application/TPMSDesigner/for_testing</item>
+      <item>/Application/TPMSDesigner/for_redistribution_files_only</item>
+      <item>/Application/TPMSDesigner/for_redistribution</item>
+      <item>/Application/TPMSDesigner</item>
+      <item>/Application/TPMS Designer GUI_resources</item>
+      <item>/Application</item>
+    </param.matlabpath.excludes>
     <param.javaclasspath.excludes />
-    <param.exported.on.package>false</param.exported.on.package>
+    <param.exported.on.package>true</param.exported.on.package>
     <param.required.addons />
     <param.matlab.project.id />
     <param.matlab.project.name />
@@ -56,14 +82,11 @@ A stand-alone application can be found in the application folder.</param.descrip
       <param.products.id />
       <param.products.version />
       <param.platforms />
-      <param.exclude.filters />
       <param.exclude.pcodedmfiles />
       <param.examples />
       <param.demosxml />
       <param.docs />
-      <param.matlabpath.excludes />
       <param.javaclasspath.excludes />
-      <param.exported.on.package />
       <param.required.addons />
       <param.matlab.project.id />
       <param.matlab.project.name />
@@ -85,12 +108,10 @@ A stand-alone application can be found in the application folder.</param.descrip
       <file>${PROJECT_ROOT}</file>
     </fileset.rootdir>
     <fileset.rootfiles>
-      <file>${PROJECT_ROOT}\Application</file>
       <file>${PROJECT_ROOT}\classes</file>
       <file>${PROJECT_ROOT}\data</file>
       <file>${PROJECT_ROOT}\demos.xml</file>
       <file>${PROJECT_ROOT}\dependancies</file>
-      <file>${PROJECT_ROOT}\DesktopToolset.xml</file>
       <file>${PROJECT_ROOT}\doc</file>
       <file>${PROJECT_ROOT}\Examples</file>
       <file>${PROJECT_ROOT}\GettingStarted.mlx</file>
@@ -103,7 +124,7 @@ A stand-alone application can be found in the application folder.</param.descrip
     <fileset.depfun.excluded />
     <fileset.package />
     <build-deliverables>
-      <file location="${PROJECT_ROOT}" name="TPMS Designer.mltbx" optional="false">F:\PhD\OneDrive - RMIT University\MATLAB\TPMS_Designer\V2.2\TPMS Designer.mltbx</file>
+      <file location="${PROJECT_ROOT}" name="TPMS Designer.mltbx" optional="false">F:\PhD\OneDrive - RMIT University\MATLAB\TPMS_Designer\V2.2.1.0\TPMS Designer.mltbx</file>
     </build-deliverables>
     <workflow />
     <matlab>
