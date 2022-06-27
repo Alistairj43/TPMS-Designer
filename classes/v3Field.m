@@ -10,7 +10,7 @@ classdef v3Field
     %   for mechanical properties using homogenisation with periodic boundary conditions 
     %
     % TPMS Design Package v3Field class
-    % Created by Alistair Jones, RMIT University 2021.
+    % Created by Alistair Jones, RMIT University 2022.
     
     properties
         name
@@ -27,14 +27,14 @@ classdef v3Field
     
     methods
         function F = v3Field(method,data,res,rstrut,rnode,lower,upper)
-            %FIELD Construct an instance of this class
-            %     optional inputs:
+            %v3Field(method,data,res,rstrut,rnode,lower,upper) construct an instance of this class
+            %   optional inputs:
             %             res (3,1) double = [30; 30; 30];
             %             lower (3,1) double = [0; 0; 0];
             %             upper (3,1) double = [10; 10; 10];
             %             method -> defines the method to be used = "flow"
-            %             data -> the data to generate the volume field
-            %             from
+            %             data -> the data to generate the v3field
+            %   returns: the v3Field object
             arguments
                 method string = "sample";
                 data = [];
@@ -115,14 +115,15 @@ classdef v3Field
             F.zSlices = XY;
         end
         
-        function F = homogenise(F,E1,v1,E2,v2)
+        function F = homogenise(F,E1,v1,E2,v2,method)
             %homogenise the unit cell using periodic boundary conditions
             arguments
                 F;
-                E1 (1,1) double = 1.053; % Elastic Modulus solid
-                v1 (1,1) double = 1/3; % Poisson's Ratio solid
-                E2 (1,1) double = 858; % Elastic Modulus secondary
-                v2 (1,1) double = 1/3; % Poisson's Ratio secondary
+                E1 (1,1) double = 1; % Elastic Modulus solid
+                v1 (1,1) double = 0.33; % Poisson's Ratio solid
+                E2 (1,1) double = 0; % Elastic Modulus secondary
+                v2 (1,1) double = 0; % Poisson's Ratio secondary
+                method string = 'pcg'; % Solver method
             end
 
             lambda1 = E1*v1/((1+v1)*(1-2*v1));
@@ -130,14 +131,15 @@ classdef v3Field
             lambda2 = E2*v2/((1+v2)*(1-2*v2));
             mu2 = E2/(2+2*v2);
             try
-                F.CH = homo3D(F.upper(1),F.upper(2),F.upper(3),lambda1,mu1,lambda2,mu2,F.property.solid);
-            catch % If homogenisation fails return NaNs
+                F.CH = homo3D(F.upper(1),F.upper(2),F.upper(3),lambda1,mu1,lambda2,mu2,...
+                    F.property.solid(1:(F.res(1)-1),1:(F.res(2)-1),1:(F.res(3)-1)),method);
+            catch % If homogenisation fails return NaN
                 F.CH = NaN(6,6);
             end
         end
         
         
-        function h = plotField(F,pName,zslice,ax)
+        function h = plotField(F,pName,zslice,ax,opt)
             %% Uses orthosliceviewer or 'slice' to visualise a v3field
             % Inputs:
             %   F - (self)
@@ -154,13 +156,10 @@ classdef v3Field
                 F;
                 pName string = 'U';
                 zslice = [];
-                ax = [];
+                ax = gca;
+                opt = [];
             end
             
-            if isempty(ax) % If not axis is provided, create one
-                figure;
-                ax = gca;
-            end
             
             pID = convertStringsToChars(extractBefore(pName+" ", " "));
             if isfield(F.property,pID)
@@ -176,17 +175,79 @@ classdef v3Field
                 %Slice on axis
                 z = F.lower(3)+zslice/100*range(F.zq,'all');
                 [Xq, Yq, Zq] = ndgrid(F.xq,F.yq,z);
-                xyslice = interp3(F.Y,F.X,F.Z,cData,Xq,Yq,Zq);
+                xyslice = interp3(F.xq,F.yq,F.zq,cData,Xq,Yq,Zq);
                 h = surf(ax,Yq,Xq,Zq,xyslice,'LineStyle','none');
-                c = colorbar; c.Label.String = pName; colormap(ax,flipud(jet));
-                caxis(ax,'manual');
+                colormap(ax,"jet");
             else
-                %Voxelated
-                cData = F.property.solid;
-                [h,~,~,~,~,~,~] = voxelSurf(cData,false);
+                h = plotVoxel(ax,F,pName,opt);
             end
+        end
+        
+        function exportINP(F,filename)
+            % Prepare voxel data for writing to INP file
+            im = F.property.solid(1:(F.res(1)-1),1:(F.res(2)-1),1:(F.res(3)-1));
+            [rows, cols, sli]  = size(im);
+            ele_ind_vector = find(im == 1);
+            num_ele = size(ele_ind_vector, 1);
+            ele_temp = zeros(num_ele, 10);
 
-            
+            for j = 1: num_ele
+                % subscript of element in im
+                [ row, col, sli ] = ind2sub( [rows, cols, sli], ele_ind_vector(j) );
+
+                % get linear index of eight corner of voxel(row,col,sli) in
+                % nodecoor_list
+                Lind_8corner = [
+                    (col-1)*(rows+1) + row + (rows+1)*(cols+1)*(sli-1), ...
+                    col*(rows+1) + row + (rows+1)*(cols+1)*(sli-1), ...
+                    col*(rows+1) + row + 1 + (rows+1)*(cols+1)*(sli-1), ...
+                    (col-1)*(rows+1) + row + 1 + (rows+1)*(cols+1)*(sli-1), ...
+                    (col-1)*(rows+1) + row + (rows+1)*(cols+1)*sli, ...
+                    col*(rows+1) + row + (rows+1)*(cols+1)*sli, ...
+                    col*(rows+1) + row + 1 + (rows+1)*(cols+1)*sli, ...
+                    (col-1)*(rows+1) + row + 1 + (rows+1)*(cols+1)*sli
+                    ];
+                % put Lind_8corner into
+                ele_temp( j, : ) = [ ele_ind_vector(j), 1, Lind_8corner ];
+            end
+            ele_cell{1} = ele_temp;
+
+            elements.E_ind = ele_temp(:,1);
+            elements.E = ele_temp(:,3:10);
+
+            % Generate unique nodes list
+            node_ind_cell = cellfun( @(A) unique(A(:,3:10)), ele_cell, 'UniformOutput', 0 );
+            unique_node_ind_v = unique( cell2mat( node_ind_cell ) );    % column vector
+
+            % generate x y z coordinate of all nodes
+            % can be accessed by X( row, col, sli ), Y( row, col, sli ),
+            % Z( row, col, sli )
+            [ X, Y, Z ] = ndgrid(F.xq, F.yq, F.zq);
+
+            % reshape into vector
+            % can be accessed by X(i), Y(i), Z(i)
+            X = X(:);
+            Y = Y(:);
+            Z = Z(:);
+
+            % extract certain nodes
+            X = X( unique_node_ind_v );
+            Y = Y( unique_node_ind_v );
+            Z = Z( unique_node_ind_v );
+
+            num_node = length( unique_node_ind_v );
+            % temporary list for parfor
+            temp_list = zeros( num_node, 3 );
+
+            for i = 1: num_node
+                temp_list( i, : ) = [ X(i), Y(i), Z(i) ];
+            end
+            nodeStruct.N_ind = unique_node_ind_v;
+            nodeStruct.N = temp_list;
+            elements.E_type = '*ELEMENT, TYPE=C3D8R, ELSET=TPMSDesigner-Elements';
+
+            % Perform writing using template format
+            writeINP(elements,nodeStruct,filename);
         end
     end
 end

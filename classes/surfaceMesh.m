@@ -1,5 +1,5 @@
 classdef surfaceMesh
-    %TRIMESH is a class to work with triangulation mesh objects
+    %surfaceMesh is a class to work with triangulation mesh objects
     %   trimesh is designed to work within the TPMS Designer toolbox
     %   trimeshes may be initialised from an implicit/field or an stl file
     %   methods have been added for calculating properties and visualising
@@ -23,17 +23,17 @@ classdef surfaceMesh
     
     methods
         function FV = surfaceMesh(varargin)
-            %TRIMESH Construct an instance of this class
-            %   Creates a standard FV mesh object, and allows various
+            %surfaceMesh Construct an instance of this class
+            %   Creates a surfaceMesh object, and allows various
             %   callbacks to convert and calculate properties.
             % The first input is a string describing the data
-            % FV = trimesh() Creates an empty array
-            % FV = trimesh('stl','path/object.stl',..) imports .stl from path 
-            % FV = trimesh('fv',FV) directly specify FV structure with matching
-            % FV = trimesh('field',field) for use with v3Field
+            % FV = surfaceMesh() Creates an empty array
+            % FV = surfaceMesh('stl','path/object.stl',..) imports .stl from path 
+            % FV = surfaceMesh('fv',FV) directly specify FV structure with matching
+            % FV = surfaceMesh('field',field) for use with v3Field
             %   properties
-            % FV = trimesh(...,0) calculate first derivative properties
-            % FV = trimesh(...,1) calculatre all properties (default)
+            % FV = surfaceMesh(...,0) calculate first derivative properties
+            % FV = surfaceMesh(...,1) calculatre all properties (default)
             if nargin == 0
                 return
             end
@@ -54,16 +54,16 @@ classdef surfaceMesh
                 
             elseif contains(varargin{1},'stl','IgnoreCase',true)
                 % Construct from stl import
-                [FV.vertices, FV.faces, FV.color, ~] = stlread2(string(varargin(2)));
+                [FV.vertices, FV.faces, FV.color, ~] = readSTL(string(varargin(2)));
                 FV.name = string(varargin(2));
                 FV.vertices = FV.vertices-min(FV.vertices,[],1);
                 
             elseif contains(varargin{1},'v3field','IgnoreCase',true)
                 [temp, FV.vertices] = reducepatch(isosurface(varargin{2}.property.X,varargin{2}.property.Y,varargin{2}.property.Z,varargin{2}.property.U,0),1);
                 if ~isempty(temp)
-                    FV.faces(:,1) = temp(:,1); FV.faces(:,2) = temp(:,3); FV.faces(:,3) = temp(:,2);
+                    FV.faces(:,1) = temp(:,1); FV.faces(:,2) = temp(:,2); FV.faces(:,3) = temp(:,3);
                 end
-                [FV.facesC, FV.verticesC] = reducepatch(isocaps(varargin{2}.property.X,varargin{2}.property.Y,varargin{2}.property.Z,varargin{2}.property.U,0,'below'),1); 
+                [FV.facesC, FV.verticesC] = reducepatch(isocaps(varargin{2}.property.X,varargin{2}.property.Y,varargin{2}.property.Z,-varargin{2}.property.U,0,'above'),1); 
             end
             
             if ~isfield(FV,'color')
@@ -111,20 +111,22 @@ classdef surfaceMesh
                 x = FV.vertices(:,1); y = FV.vertices(:,2);
                 z = FV.vertices(:,3); tri = FV.faces;
                 tri3d=triangulation(FV.faces,FV.vertices);
-                normal = normalize(vertexNormal(tri3d),2,'norm');
-                vp.Nx = normal(:,1); vp.Ny = normal(:,2); vp.Nz = normal(:,3);
-                vp.inclination = 180-real(acosd(normal(:,3)));                
+                ntemp = normalize(vertexNormal(tri3d),2,'norm');
+                %vp.Nx = ntemp(:,1); vp.Ny = ntemp(:,2); vp.Nz = ntemp(:,3);
+                vp.inclination = 180-real(acosd(ntemp(:,3)));                
                 
-                normal = normalize(faceNormal(tri3d),2,'norm');
-                p.Nx = normal(:,1); p.Ny = normal(:,2); p.Nz = normal(:,3);
-                p.inclination = real(acosd(p.Nz));
-                p.centroid = incenter(tri3d);
+                ntemp = normalize(faceNormal(tri3d),2,'norm');
+                p.Nx = ntemp(:,1); p.Ny = ntemp(:,2); p.Nz = ntemp(:,3);
+                [azi, inc, ~] = cart2sph(p.Nx,p.Ny,p.Nz);
+                p.Finclination = 90+180/pi*inc;
+                p.Fazimuth = 180/pi*azi;
+                Fcentroid = incenter(tri3d);
                 v1=[x(tri(:,2))-x(tri(:,1)),y(tri(:,2))-y(tri(:,1)),z(tri(:,2))-z(tri(:,1))];
                 v2=[x(tri(:,3))-x(tri(:,1)),y(tri(:,3))-y(tri(:,1)),z(tri(:,3))-z(tri(:,1))];
-                p.area = 0.5*vecnorm(cross(v1,v2,2),2,2);
-                p.volume = p.area.*p.centroid(:,3).*p.Nz;
-                FV.totalVolume = FV.totalVolume + sum(p.volume,'all');
-                FV.totalArea = FV.totalArea + sum(p.area,'all');
+                p.Farea = 0.5*vecnorm(cross(v1,v2,2),2,2);
+                p.Fvolume = p.Farea.*Fcentroid(:,3).*p.Nz;
+                FV.totalVolume = FV.totalVolume + sum(p.Fvolume,'all');
+                FV.totalArea = FV.totalArea + sum(p.Farea,'all');
                 
                 % Basic Derived Properties
                 vp.LPBFQuality = 0.5+0.5*tanh((vp.inclination-30)/20); 
@@ -143,11 +145,11 @@ classdef surfaceMesh
                         % more computationally expensive
                         useThird = 1;
                         [vp.GC, vp.MC, vp.k1, vp.k2, vp.RMS, vp.ABS] = patchcurvature(FV.faces,FV.vertices,useThird);
-%                     case 'implicit'
-%                         %Implicit curvature method - only valid for TPMS
-%                         if ~isdeployed
-%                             [vp.GC, vp.MC, vp.k1, vp.k2, vp.RMS, vp.ABS] = implicitcurvature(TPMS,FV.vertices);
-%                         end
+                    case 'implicit'
+                        %Implicit curvature method - only valid for TPMS
+                        if ~isdeployed
+                            [vp.GC, vp.MC, vp.k1, vp.k2, vp.RMS, vp.ABS] = implicitcurvature(TPMS,FV.vertices);
+                        end
                 end
                 
                 if isfield(vp,'GC')
@@ -162,7 +164,7 @@ classdef surfaceMesh
             end
         end
  
-        function h = plotMesh(FV,pName,opt,ax)
+        function h = plotMesh(FV,pName,ax,opt)
             % Function to plot a coloured mesh onto axis 'ax'
             % FV.plotMesh(ax)
             % FV.plotmesh(ax,property)
@@ -170,8 +172,8 @@ classdef surfaceMesh
             arguments
                 FV;
                 pName string = [];
-                opt = [];                
                 ax = [];
+                opt = [];
             end
             h = []; % Create empty object to return
             if isempty(ax)
@@ -194,19 +196,25 @@ classdef surfaceMesh
                 else
                     opts.FaceColor = 'flat';
                 end
-                opts.LineStyle = 'none';
+                
+                if isfield(opt,'LineStyle')
+                    opts.LineStyle = opt.LineStyle;
+                end
+                
                 opts.LineWidth = 0.001;
                 opts.EdgeAlpha = 0.1;
-                patch(ax,'Faces',FV.faces,'Vertices',FV.vertices,'FaceVertexCData',cData,opts);
-                %xlabel(ax,"X (mm)"); ylabel(ax,"Y (mm)"); zlabel(ax,"Z - Build Direction (mm)");
-                if ~isempty(pName)
+                
+                h = patch(ax,'Faces',FV.faces,'Vertices',FV.vertices,'FaceVertexCData',cData,opts);
+                xlabel(ax,"X"); ylabel(ax,"Y"); zlabel(ax,"Z");
+                try 
                     c=colorbar(ax); c.Label.String = pName; colormap(ax,"jet");
-                    caxisrange = prctile(cData,[0.01 99.99],"all");
-                    caxis(ax,caxisrange); 
                     ticks = unique(sort([caxisrange(1) get(c, 'YTick') caxisrange(2)]));
                     set(c, 'YTick', ticks);
+                catch
+                    % Error handling here
                 end
             end
+            
             if isfield(opt,'fancy')&&opt.fancy
                 material(h,'shiny');
                 view(ax,62,31); 
@@ -220,21 +228,20 @@ classdef surfaceMesh
             if ~isempty(FV.facesC)
                 alpha = 1;
                 hold(ax,"on");
-                patch(ax,'Faces',FV.facesC,'Vertices',FV.verticesC,'FaceColor',[0.2,0.2,0.2],...
+                h(2) = patch(ax,'Faces',FV.facesC,'Vertices',FV.verticesC,'FaceColor',[0.2,0.2,0.2],...
                     'FaceAlpha',alpha,'LineStyle','none');
                 hold(ax,"off");
             end
             rotate3d(ax,'on');
-
         end
 
         
-        function writeSTL(FV,filename)
+        function exportSTL(FV,filename)
             % Funtion to convert an FV structure to a Field
             % inputs:
-            %   voxelSize - desired size of each voxel. default 1.0mm
-            % outputs:
-            %   F - v3Field object based on the distance-field of the trimesh object
+            %   FV - surfaceMesh object
+            %   filename - path/name to save file as
+            % outputs: none
             arguments
                 FV;
                 filename string = "TPMSObject.stl";
@@ -246,7 +253,6 @@ classdef surfaceMesh
             end
             
             stlwrite(tri,filename,"binary");
-            
         end
 
         function F = getField(FV, voxelSize)
@@ -254,7 +260,7 @@ classdef surfaceMesh
             % inputs:
             %   voxelSize - desired size of each voxel. default 1.0mm
             % outputs:
-            %   F - v3Field object based on the distance-field of the trimesh object
+            %   F - v3Field object based on the distance-field of the surfaceMesh object
             arguments
                 FV;
                 voxelSize (1,1) double = 1.0;

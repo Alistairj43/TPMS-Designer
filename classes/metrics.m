@@ -46,12 +46,6 @@ classdef metrics
         areaStd
         areaMin
         areaMax
-                
-        areaBelow30deg
-        LpbfRa_Max
-        LpbfRa_Mean
-        LPBFerror_Mean
-        LPBFerror_Max
         
         elastic
         poisson
@@ -70,22 +64,17 @@ classdef metrics
         end
         
         function M = fvMetrics(M,FV)
-            % Function to calculate metrics based on properties of FV mesh.
-            try
-            M.errorFlag = 0;
+            % Function to calculate metrics based on properties of a surfaceMesh.
             M.surfaceArea = FV.totalArea;
-            M.volume = FV.totalVolume;
-            M.areaBelow30deg = sum(FV.Fproperty.area(FV.Fproperty.inclination<30),'all','omitnan')/M.surfaceArea;
-            M.LpbfRa_Mean = mean(FV.Vproperty.Ra,'all','omitnan');
-            M.LpbfRa_Max = prctile(FV.Vproperty.Ra,98,"all");
+            M.volume = abs(FV.totalVolume);
             M.Nfaces = size(FV.faces,1);
             M.Nnodes = size(FV.vertices,1);
-            if isfield(FV.Vproperty,'MC')
-                M.rmsMC = rms(FV.Vproperty.MC);
-                M.rmsGC = rms(FV.Vproperty.GC);
-                M.LPBFerror_Mean = mean(FV.Vproperty.LPBFerror,'all','omitnan')/M.surfaceArea;
-                M.LPBFerror_Max = prctile(FV.Vproperty.LPBFerror,98,"all");
-            end
+            try
+                M.errorFlag = 0;
+                if isfield(FV.Vproperty,'MC')
+                    M.rmsMC = rms(FV.Vproperty.MC);
+                    M.rmsGC = rms(FV.Vproperty.GC);
+                end
             catch
                 M.errorFlag = 1;
             end

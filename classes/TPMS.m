@@ -10,7 +10,7 @@ classdef TPMS
     %structures
     %
     % TPMS Design Package TPMS class
-    % Created by Alistair Jones, RMIT University 2021.
+    % Created by Alistair Jones, RMIT University 2022.
     
     properties
         equation
@@ -30,9 +30,8 @@ classdef TPMS
     
     methods
         function TPMS = TPMS(equation,type,v,vf,res,cellSize,ncells,Rxyz,offset)
-            %CREATEDOE generates a DOE based so a single loop can be used for
-            %generating a full-factorial experimental settup
-            %   Detailed explanation goes here
+            %TPMS(equation,type,v,vf,res,cellSize,ncells,Rxyz,offset) construct an instance of this class
+            %   returns: the TPMS object
             arguments
                 equation = "Gyroid";
                 type string = "Network";
@@ -111,7 +110,7 @@ classdef TPMS
         end
         
         function out = export(TPMS)
-            % Flattens structure to save only single value outputs
+            % Flattens structure of the TPMS object to return set of single-value metrics
             out = TPMS.M.export;
             out.equation = TPMS.equation;
             out.type = TPMS.type;
@@ -131,7 +130,7 @@ classdef TPMS
         end
         
         function h = plot(TPMS,ax,plottype,property1,property2,opts)
-            % Handles the plotting, returning a handle to the figure
+            % Handles plotting returning a handle to the created figure
             arguments
                 TPMS;
                 ax = [];
@@ -140,28 +139,38 @@ classdef TPMS
                 property2 string = "gaussian curvature (mm^-^2)";
                 opts = [];
             end
-            
+
+            % If no axis is provided create a new figure and use it
             if isempty(ax)
-                figure; %Create a new figure and use it as the axis
+                figure; 
                 ax = gca;
             end
             
             switch plottype
                 case "surfaceMesh"
-                    h = TPMS.FV.plotMesh(property1,opts,ax);
+                    h = TPMS.FV.plotMesh(property1,ax,opts);
                 case "voxel"
-                    h = TPMS.F.plotField(property1,"voxels",ax);
+                    h = TPMS.F.plotField(property1,"voxel",ax,opts);
                 case "orthoslice"
                     h = TPMS.F.plotField(property1,[],ax);
                 case "slice"
-                    n = 50;
-                    h= TPMS.F.plotField(property1,n,ax);
+                    if isfield(opts,'slice')
+                        s = opts.slice;
+                    else
+                        s = 50;
+                    end
+                    h= TPMS.F.plotField(property1,s,ax);
                 case "histogram"
                     h = plotHistogram(ax,TPMS.FV,property1,opts);
                 case "histogram2"
                     h = plotHistogram2(ax,TPMS.FV,property1,property2,opts);
                 case "polemap"
-                    h = plotPoleFig(ax,TPMS.FV,3);
+                    if isfield(opts,'n')
+                        n = opts.n;
+                    else
+                        n = 3;
+                    end
+                    h = plotPoleFig(ax,TPMS.FV,n);
                 case "tensor"
                     h = plotTensor(ax,TPMS.F.CH);
             end
@@ -175,7 +184,7 @@ classdef TPMS
                 usefield = 1;
                 mechanical = 1;
                 usetri = 1;
-                curvature = 'implicit';
+                curvature = 'patch';
             end
             tic;
             if isempty(TPMS.F)
@@ -224,14 +233,14 @@ classdef TPMS
             [X, Y, Z] = transformPointsInverse(tform,Ftemp.property.X,Ftemp.property.Y,Ftemp.property.Z);
             
             switch TPMS.type
+                case "surface"
+                    Ftemp.property.U = (TPMS.u(X,Y,Z)-vtemp).*(TPMS.u(X,Y,Z)+vtemp);
                 case "double"
                     vtemp2 = voxresize(TPMS.vf,TPMS.res.*TPMS.ncells);
                     Ftemp.property.U = (TPMS.u(X,Y,Z)-vtemp).*(TPMS.u(X,Y,Z)-vtemp2);
-                case "surface"
-                    Ftemp.property.U = (TPMS.u(X,Y,Z)-vtemp).*(TPMS.u(X,Y,Z)+vtemp);
-                case "bounded"
-                    Ftemp.property.U = (TPMS.u(X,Y,Z)-TPMS.v).*(TPMS.u(X,Y,Z)-TPMS.vf);
-                otherwise
+                case "single"
+                    Ftemp.property.U = TPMS.u(X,Y,Z)-TPMS.v;
+                otherwise % "network"
                     Ftemp.property.U = TPMS.u(X,Y,Z)-vtemp;
             end
             Ftemp.property.solid = double(Ftemp.property.U<0);
