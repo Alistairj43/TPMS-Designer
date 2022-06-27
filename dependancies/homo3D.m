@@ -1,4 +1,4 @@
-function CH = homo3D(lx,ly,lz,lambda,mu,lambda2,mu2,voxel)
+function CH = homo3D(lx,ly,lz,lambda,mu,lambda2,mu2,voxel,method)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % lx       = Unit cell length in x-direction.
 % ly       = Unit cell length in y-direction.
@@ -6,6 +6,7 @@ function CH = homo3D(lx,ly,lz,lambda,mu,lambda2,mu2,voxel)
 % lambda   = Lame's first parameter for solid materials.
 % mu       = Lame's second parameter for solid materials.
 % voxel    = Material indicator matrix. Used to determine nelx/nely/nelz
+% method   = Solver method, 'pcg' (default) or 'direct'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% INITIALIZE
 [nelx, nely, nelz] = size(voxel); %size of voxel model along x,y and z axis
@@ -58,12 +59,16 @@ F  = sparse(iF(:), jF(:), sF(:), ndof, 6);
 activedofs = edof(voxel==1,:); activedofs = sort(unique(activedofs(:)));
 X = zeros(ndof,6);
 L = ichol(K(activedofs(4:end),activedofs(4:end)));
-for i = 1:6
-    [X(activedofs(4:end),i),flag] = pcg(K(activedofs(4:end),...
-        activedofs(4:end)),F(activedofs(4:end),i),1e-10,300,L,L');
+if strcmp(method,'direct')
+    X(activedofs(4:end),:) = K(activedofs(4:end),activedofs(4:end))...
+        \F(activedofs(4:end),:);    % Solving by direct method
+else
+    for i = 1:6
+        [X(activedofs(4:end),i),flag] = pcg(K(activedofs(4:end),...
+            activedofs(4:end)),F(activedofs(4:end),i),1e-10,300,L,L');
+    end
 end
-% X(activedofs(4:end),:) = K(activedofs(4:end),activedofs(4:end))...
-%     \F(activedofs(4:end),:);    % Solving by direct method
+
 %% HOMOGENIZATION
 % The displacement vectors corresponding to the unit strain cases
 X0 = zeros(nel, 24, 6);

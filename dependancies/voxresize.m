@@ -1,4 +1,5 @@
 function out = voxresize(in,sz)
+
 [l,w,h] = size(in);
 
 if l==1 && w==1 && h==1
@@ -19,4 +20,3 @@ else
         linspace(1,size(in,3),sz(3)));
     out=interp3(in,x,y,z); % Return the rehspaped array
 end
-        
