@@ -34,7 +34,7 @@ classdef metrics
         CPUtime
         Nfaces
         Nnodes
-        errorFlag
+        errorFlag = 0;
         
         %Geometric
         meshVolume
@@ -77,7 +77,6 @@ classdef metrics
             M.Nfaces = size(FV.faces,1);
             M.Nnodes = size(FV.vertices,1);
             try
-                M.errorFlag = 0;
                 if isfield(FV.Vproperty,'MC')
                     M.rmsMC = rms(FV.Vproperty.MC);
                     M.rmsGC = rms(FV.Vproperty.GC);
