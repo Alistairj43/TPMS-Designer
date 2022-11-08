@@ -1,4 +1,4 @@
-classdef Metrics
+classdef metrics
     % Metrics        
     % The metrics class stores and evaluates various properties using other
     % classes within the TPMS Designer package
@@ -63,7 +63,7 @@ classdef Metrics
     end
     
     methods
-        function M = Metrics()
+        function M = metrics()
             %Constructor
             if nargin==0
                 return;

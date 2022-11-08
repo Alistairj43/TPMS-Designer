@@ -1,4 +1,4 @@
-classdef SurfaceMesh
+classdef surfaceMesh
     %SurfaceMesh is a class to work with triangulation mesh objects
     %   designed to work within the TPMS Designer toolbox trimeshes may be 
     %   initialised from an implicit/field or an stl file 
@@ -22,7 +22,7 @@ classdef SurfaceMesh
     end
     
     methods
-        function FV = SurfaceMesh(varargin)
+        function FV = surfaceMesh(varargin)
             % SurfaceMesh Construct an instance of this class
             %   Creates a surfaceMesh object, and allows various
             %   callbacks to convert and calculate properties.
@@ -43,7 +43,7 @@ classdef SurfaceMesh
             if contains(varargin{1},'fv','IgnoreCase',true)
                 % Construct from existing FV structure
                 fields = fieldnames(varargin{2});
-                isfield(fields,properties(SurfaceMesh));
+                isfield(fields,properties(surfaceMesh));
                 for i = 1:length(fields)
                     FV.(fields{i})= varargin{2}.(fields{i});
                 end
@@ -180,7 +180,7 @@ classdef SurfaceMesh
             % Function to plot a coloured mesh onto axis 'ax'
             %Defaults
             arguments
-                FV SurfaceMesh;
+                FV surfaceMesh;
                 pName string = [];
                 p2Name string = [];
                 caps double = 0.6;

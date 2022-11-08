@@ -9,7 +9,7 @@ function h = plotHistogram2(FV,property1,property2,opts,ax)
 %       Probability of a value falling within a bin,...
 %       Cumulative probability distribution] 
 arguments
-    FV SurfaceMesh = [];
+    FV = [];
     property1 string = [];
     property2 string = [];
     opts = [];

@@ -13,6 +13,10 @@ arguments
     opt = [];
 end
 
+if isempty(ax)
+    figure; ax = gca; rotate3d(ax,'on'); view(ax,62,31);
+end
+
 try
     cData = data.property.(extractBefore(pName+' ',' '));
 catch

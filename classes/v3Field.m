@@ -1,4 +1,4 @@
-classdef V3Field
+classdef v3Field
     %v3Field is a class to deal with 3D volume data
     %   v3Fields can be created from an implicit function, surfaceMesh, or
     %   lattice structure (defined by the nodes and struts).
@@ -27,7 +27,7 @@ classdef V3Field
     end
 
     methods
-        function F = V3Field(method,data,res,rstrut,rnode,lower,upper)
+        function F = v3Field(method,data,res,rstrut,rnode,lower,upper)
             %V3Field(method,data,res,rstrut,rnode,lower,upper) construct an instance of this class
             %   optional inputs:
             %             res (3,1) double = [30; 30; 30];
@@ -171,7 +171,7 @@ classdef V3Field
             arguments
                 F;
                 pName string = 'U';
-                zslice = [];
+                zslice = 50;
                 opt = [];
                 ax = [];
             end
@@ -188,18 +188,16 @@ classdef V3Field
                 cData = F.(pID);
             end
 
-            switch zslice
-                case "orthoslice"
-                    h = orthosliceViewer(cData,'Parent',ax.Parent,'Colormap',[0 0 0; flipud(jet)]);
-                case "voxel"
-                    h = plotVoxel(ax,F,pName,opt);
-                otherwise % Numeric slice number value
-                    %Slice on axis
-                    z = F.lower(3)+zslice/100*range(F.zq,'all');
-                    [Xq, Yq, Zq] = ndgrid(F.xq,F.yq,z);
-                    xyslice = interp3(F.xq,F.yq,F.zq,cData,Xq,Yq,Zq);
-                    h = surf(ax,Yq,Xq,Zq,xyslice,'LineStyle','none');
-                    colormap(ax,"jet");
+            if isnumeric(zslice)
+                z = F.lower(3)+zslice/100*range(F.zq,'all');
+                [Xq, Yq, Zq] = ndgrid(F.xq,F.yq,z);
+                xyslice = interp3(F.xq,F.yq,F.zq,cData,Xq,Yq,Zq);
+                h = surf(ax,Yq,Xq,Zq,xyslice,'LineStyle','none');
+                colormap(ax,"jet");
+            elseif strcmp(zslice,'orthoslice')
+                h = orthosliceViewer(cData,'Parent',ax.Parent,'Colormap',[0 0 0; flipud(jet)]);
+            else
+                h = plotVoxel(ax,F,pName,opt);
             end
         end
 

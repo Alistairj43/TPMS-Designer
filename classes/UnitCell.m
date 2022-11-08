@@ -47,7 +47,7 @@ classdef UnitCell
             UnitCell.v2 = v2;
             UnitCell.res = res;
             UnitCell.cellSize = cellSize;
-            UnitCell.M = Metrics();
+            UnitCell.M = metrics();
             A = [];
 
             switch UnitCell.equation
@@ -219,10 +219,10 @@ classdef UnitCell
             if isempty(UnitCell.F)
                 if strcmp(UnitCell.type,'lattice') %Handle Lattices
                     lower = [0 0 0];
-                    UnitCell.F = V3Field('lattice',UnitCell.u,UnitCell.res,UnitCell.v1,UnitCell.v2,lower,UnitCell.cellSize);
+                    UnitCell.F = v3Field('lattice',UnitCell.u,UnitCell.res,UnitCell.v1,UnitCell.v2,lower,UnitCell.cellSize);
                 else
                     % Initialise the Field
-                    UnitCell.F = V3Field("empty",[],ceil(UnitCell.res),0,0,[0 0 0],UnitCell.cellSize);  % Move to discretized space centred at origin
+                    UnitCell.F = v3Field("empty",[],ceil(UnitCell.res),0,0,[0 0 0],UnitCell.cellSize);  % Move to discretized space centred at origin
                     
                     % Scale to cell lengths
                     X = UnitCell.F.property.X.*2.*pi./UnitCell.cellSize(1);
@@ -250,7 +250,7 @@ classdef UnitCell
 
             % Generate the SurfaceMesh
             if computeMesh&&isempty(UnitCell.FV) 
-                UnitCell.FV = SurfaceMesh('V3Field',UnitCell.F);
+                UnitCell.FV = surfaceMesh('V3Field',UnitCell.F);
                 UnitCell.FV = UnitCell.FV.calculateProperties(computeCurvature,UnitCell);
                 UnitCell.M = UnitCell.M.fvMetrics(UnitCell.FV);                
                 temp = UnitCell.cellSize;
