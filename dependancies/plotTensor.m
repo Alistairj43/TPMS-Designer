@@ -1,5 +1,14 @@
 % input the homogenized elasticity tensor
-function s = plotTensor(ax,CH)
+function s = plotTensor(CH,ax)
+arguments
+    CH;
+    ax = [];
+end
+
+if isempty(ax)
+    figure; ax = gca;
+end
+
 % transform it to 3*3*3*3 tensor
 tensor = generate(CH);
 % find the E1 in 360 degree
@@ -27,6 +36,7 @@ end
 [x,y,z] = sph2cart(a,e,E1);
 c = sqrt(x.^2+y.^2+z.^2);
 s = surf(ax,x,y,z,c,'FaceColor','interp','EdgeColor','none');
+
 c=colorbar(ax); c.Label.String = 'Relative Elastic Modulus'; colormap(ax,"jet");
 %caxis(ax,[0 0.2]);
 axis(ax,'manual','vis3d','equal','tight');
@@ -34,6 +44,8 @@ xlabel(ax,"X"); ylabel(ax,"Y"); zlabel(ax,"Z");
 ax.XTick = []; ax.YTick = []; ax.ZTick = [];
 ax.BoxStyle = 'full'; 
 rotate3d(ax,'on');
+view(ax,62,31); 
+
 end
 function [E] = modulus(CH)
 S = inv(CH);

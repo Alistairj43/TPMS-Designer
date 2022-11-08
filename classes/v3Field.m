@@ -1,4 +1,4 @@
-classdef v3Field
+classdef V3Field
     %v3Field is a class to deal with 3D volume data
     %   v3Fields can be created from an implicit function, surfaceMesh, or
     %   lattice structure (defined by the nodes and struts).
@@ -6,17 +6,18 @@ classdef v3Field
     %   The v3Field class comes with visualisation options to look at a
     %   particular slice, orthographic slice viewer, or voxelated object
     %
-    %   v3Fields representing periodic unit cells may be assessed 
-    %   for mechanical properties using homogenisation with periodic boundary conditions 
+    %   v3Fields representing periodic unit cells (such as TPMS or lattices) may be assessed
+    %   for mechanical properties using homogenisation with periodic boundary conditions
     %
-    % TPMS Design Package v3Field class
+    % TPMS Design Package - v3Field class
     % Created by Alistair Jones, RMIT University 2022.
-    
+
     properties
         name
         lower
         upper
         res
+        voxelSize
         xq
         yq
         zq
@@ -24,10 +25,10 @@ classdef v3Field
         zSlices
         CH
     end
-    
+
     methods
-        function F = v3Field(method,data,res,rstrut,rnode,lower,upper)
-            %v3Field(method,data,res,rstrut,rnode,lower,upper) construct an instance of this class
+        function F = V3Field(method,data,res,rstrut,rnode,lower,upper)
+            %V3Field(method,data,res,rstrut,rnode,lower,upper) construct an instance of this class
             %   optional inputs:
             %             res (3,1) double = [30; 30; 30];
             %             lower (3,1) double = [0; 0; 0];
@@ -47,6 +48,7 @@ classdef v3Field
             F.res = res;
             F.lower = lower;
             F.upper = upper;
+            F.voxelSize = (upper-lower)./res;
             F.xq = linspace(lower(1),upper(1),res(1));
             F.yq = linspace(lower(2),upper(2),res(2));
             F.zq = linspace(lower(3),upper(3),res(3));
@@ -54,8 +56,8 @@ classdef v3Field
             switch method
                 case "FV"
                     temp.faces = data.faces;
-                    temp.vertices = 1+(res-1).*((data.vertices-lower)./(upper-lower));
-                    F.property.surface = 1.0*polygon2voxel(temp,[res(2),res(1),res(3)],'wrap',true);
+                    temp.vertices = 1+(1-1./res).*((data.vertices-lower)./F.voxelSize);
+                    F.property.surface = 1.0*voxelateMesh(temp,[res(2),res(1),res(3)],'wrap',true);
                     F.property.solid = imfill(1.0*F.property.surface);
                     F.property.U = double(1.0.*(bwdist(F.property.solid)-bwdist(1.0-F.property.solid)));
                 case "data"
@@ -64,14 +66,19 @@ classdef v3Field
                 case "lattice"
                     if isstring(data)
                         filepath = strcat("data/lattices/",data,".txt");
+                        [nodes,struts] = readStrut(filepath); % get the information of strut
+
+                    elseif isfield(data,'nodes')
+                        nodes = data.nodes;
+                        struts = data.struts;
                     else
                         filepath = "data/lattices/BCC.txt";
+                        [nodes,struts] = readStrut(filepath); % get the information of strut
                     end
-                    [F.property.solid] = voxelateLattice(F.property.X,F.property.Y,F.property.Z,[F.lower; F.upper],filepath,rstrut,rnode);
-                    F.property.U =  double(1.0.*(bwdist(F.property.solid)-bwdist(1.0-F.property.solid)));
+                    [F.property.solid, F.property.U] = voxelateLattice(F.property.X,F.property.Y,F.property.Z,[F.lower; F.upper],nodes,struts,rstrut,rnode);
             end
         end
-        
+
         function F = calculateProperties(F,method,TPMS)
             %Evaluate the values of the field
             %Inputs
@@ -79,42 +86,51 @@ classdef v3Field
             %   TPMS - the TPMS object for implicit differentiation (optional)
             arguments
                 F;
-                method string = "sobel";
+                method string = [];
                 TPMS = [];
             end
             p = F.property;
 
-            if strcmp("implicit",method)&&~isempty(TPMS) % Use implicit differentiation to calculate proeprties
-                
-            else % Use field integration to calculate properties
-                [~,p.azimuth,elevation] = imgradient3(imgaussfilt3(F.property.U, 0.5),method);
-                p.inclination = 90-elevation;
+            % Computationally cheap properties
+            [~,p.V3Azimuth,elevation] = imgradient3(imgaussfilt3(F.property.U, 0.5),'sobel');
+            p.V3inclination = 90+elevation;
+
+            if strcmp("implicit",method) % Use implicit differentiation to calculate proeprties
+                [l, w, h] = size(F.property.X);
+                points = [reshape(F.property.X,[l*w*h,1,1]) reshape(F.property.Y,[l*w*h,1,1]) reshape(F.property.Z,[l*w*h,1,1])];
+                [GC, MC, k1, k2] = curvatureImplicit(TPMS,points);
+                p.V3k1 = reshape(max(min(k1,10),-10),[l,w,h]);
+                p.V3k2 = reshape(max(min(k2,10),-10),[l,w,h]);
+                p.V3GC = reshape(max(min(GC,10),-10),[l,w,h]);
+                p.V3MC = reshape(max(min(MC,10),-10),[l,w,h]);
             end
 
-            
+
             % Manufacturability using elipsoidal weighting filter -> 1 = perfect, 0 = empty space
             n = 9; nq = linspace(-1,1,n); [q1, q2, q3] = ndgrid(nq,nq,nq);
             c = 2.5; c1 = 0; c2 = 0.5;
             H = 1/(c^3*(2*pi)^(3/2)).*exp(-(q1.^2+q2.^2+q3.^2)/(2*c^2)); % Make weightings with gaussian distribution
             H(:,:,ceil((n/2)+1):n) = c1.*H(:,:,ceil((n/2)+1):n); % Set top half equal to 0.1
             H(:,:,ceil((n/2))) = c2.*H(:,:,ceil((n/2))); % Set current plane properties
-            
-            
+
+
             temp = zeros(size(F.property.solid,1)+2*n,size(F.property.solid,2)+2*n,size(F.property.solid,3)+n); % "Air" Padding
             temp(:,:,1:n) = ones(size(F.property.solid,1)+2*n,size(F.property.solid,2)+2*n,n); % "Build Platten" Padding Below
             temp(n+1:n+size(F.property.solid,1),n+1:n+size(F.property.solid,2),n+1:n+size(F.property.solid,3)) = F.property.solid; % Placing the Part
             temp = min(1,imfilter(temp,H)); % Apply convolutional filter
-            p.manufacturability = F.property.solid-1+temp(n+1:n+size(F.property.solid,1),n+1:n+size(F.property.solid,2),n+1:n+size(F.property.solid,3)).*F.property.solid;
+            p.V3buildRisk = F.property.solid-temp(n+1:n+size(F.property.solid,1),n+1:n+size(F.property.solid,2),n+1:n+size(F.property.solid,3)).*F.property.solid;
+            p.V3buildRisk(F.property.solid==0) = nan;
             F.property = p;
+
             for i = 1:size(F.property.solid,3)
                 % Pad to account for periodic boundary conditions
                 temp = padarray(F.property.solid,[1 1],0);
-                XY.thickness(i) = max(bwdist(~temp),[],'all').*mean((F.upper-F.lower)./F.res);
+                XY.maxthickness(i) = max(bwdist(~temp),[],'all').*mean((F.upper-F.lower)./F.res);
                 XY.area(i) = sum(F.property.solid(:,:,i),'all')./(F.res(1)*F.res(2));
             end
             F.zSlices = XY;
         end
-        
+
         function F = homogenise(F,E1,v1,E2,v2,method)
             %homogenise the unit cell using periodic boundary conditions
             arguments
@@ -131,58 +147,63 @@ classdef v3Field
             lambda2 = E2*v2/((1+v2)*(1-2*v2));
             mu2 = E2/(2+2*v2);
             try
-                F.CH = homo3D(F.upper(1),F.upper(2),F.upper(3),lambda1,mu1,lambda2,mu2,...
+                F.CH = computeStiffness(F.upper(1),F.upper(2),F.upper(3),lambda1,mu1,lambda2,mu2,...
                     F.property.solid(1:(F.res(1)-1),1:(F.res(2)-1),1:(F.res(3)-1)),method);
             catch % If homogenisation fails return NaN
                 F.CH = NaN(6,6);
             end
         end
-        
-        
-        function h = plotField(F,pName,zslice,ax,opt)
-            %% Uses orthosliceviewer or 'slice' to visualise a v3field
+
+        function h = plotField(F,pName,zslice,opt,ax)
+            %% Uses 'orthosliceviewer', 'slice' or a voxel represenation to visualise a V3Field
             % Inputs:
             %   F - (self)
             %   ax - Axis to plot field on
             %   pName - property to investigate
-            %   zslice - z height as a percentage of the total height to
-            %           slice (between 0 and 100)
+            %   zslice - z height as a percentage of the total height to slice (between 0 and 100),
+            %           input [] to use the orthosliceviewer,
+            %           input anything else to plot a voxelated representation
             % Outputs:
             %   h - handle to created object
             % Example:
             %   h = F.plotField('Nz',50)
-            %   Credit: Alistair Jones, 12/11/2020, RMIT University
+            %   Credit: Alistair Jones, 2022, RMIT University
             arguments
                 F;
                 pName string = 'U';
                 zslice = [];
-                ax = gca;
                 opt = [];
+                ax = [];
             end
-            
-            
+
+            if isempty(ax)
+                figure; ax = gca;
+            end
+
+
             pID = convertStringsToChars(extractBefore(pName+" ", " "));
             if isfield(F.property,pID)
                 cData = F.property.(pID);
             else
                 cData = F.(pID);
             end
-                         
-            if isempty(zslice)
-                %Orthoslice
-                h = orthosliceViewer(cData,'Parent',ax.Parent,'Colormap',[0 0 0; flipud(jet)]);
-            elseif isnumeric(zslice)
-                %Slice on axis
-                z = F.lower(3)+zslice/100*range(F.zq,'all');
-                [Xq, Yq, Zq] = ndgrid(F.xq,F.yq,z);
-                xyslice = interp3(F.xq,F.yq,F.zq,cData,Xq,Yq,Zq);
-                h = surf(ax,Yq,Xq,Zq,xyslice,'LineStyle','none');
-                colormap(ax,"jet");
-            else
-                h = plotVoxel(ax,F,pName,opt);
+
+            switch zslice
+                case "orthoslice"
+                    h = orthosliceViewer(cData,'Parent',ax.Parent,'Colormap',[0 0 0; flipud(jet)]);
+                case "voxel"
+                    h = plotVoxel(ax,F,pName,opt);
+                otherwise % Numeric slice number value
+                    %Slice on axis
+                    z = F.lower(3)+zslice/100*range(F.zq,'all');
+                    [Xq, Yq, Zq] = ndgrid(F.xq,F.yq,z);
+                    xyslice = interp3(F.xq,F.yq,F.zq,cData,Xq,Yq,Zq);
+                    h = surf(ax,Yq,Xq,Zq,xyslice,'LineStyle','none');
+                    colormap(ax,"jet");
             end
         end
-        
+
+
         function exportINP(F,filename)
             % Prepare voxel data for writing to INP file
             im = F.property.solid(1:(F.res(1)-1),1:(F.res(2)-1),1:(F.res(3)-1));

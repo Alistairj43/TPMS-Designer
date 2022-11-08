@@ -1,4 +1,4 @@
-function h =plotVoxel(ax,data,property,opt)
+function h =plotVoxel(ax,data,pName,opt)
 %% Function plots a voxelated patch, coloured by "property"
 % Inputs:   ax              - Handle to axis to plot on
 %           data            - surfaceMesh object containing FV data
@@ -6,16 +6,22 @@ function h =plotVoxel(ax,data,property,opt)
 % Outputs:  h               - handle to the created patch graphical object
 %
 %   Credit: Alistair Jones, 2022, RMIT University
+arguments
+    ax = [];
+    data = [];
+    pName string = 'solid';
+    opt = [];
+end
 
 try
-    pField = data.property.(extractBefore(property+' ',' '));
+    cData = data.property.(extractBefore(pName+' ',' '));
 catch
-    property = "solid";
-    pField = data.property.solid;
+    pName = "solid";
+    cData = data.property.solid;
 end
 
 voxels = data.property.solid(1:(data.res(1)-1),1:(data.res(2)-1),1:(data.res(3)-1));
-cData = pField(1:(data.res(1)-1),1:(data.res(2)-1),1:(data.res(3)-1));
+cData = cData(1:(data.res(1)-1),1:(data.res(2)-1),1:(data.res(3)-1));
 
 %detect the external voxels and faces
 [FV, cData] = FindExternalVoxels(voxels,cData);
@@ -26,17 +32,16 @@ else
     FV.vertices = FV.vertices.*(data.upper-data.lower)./(data.res-1);
     h=patch(ax,'Faces',FV.faces,'Vertices',FV.vertices,'FaceVertexCData',cData,'FaceColor','flat');
     xlabel(ax,"X"); ylabel(ax,"Y"); zlabel(ax,"Z");
-    c=colorbar(ax,'EastOutside'); c.Label.String = property; colormap(ax,"jet");
+    c=colorbar(ax,'EastOutside'); c.Label.String = pName; colormap(ax,"jet");
     rotate3d(ax,'on');
     
-    if isfield(opt,'fancy')&&opt.fancy
-        material(h,'shiny');
-        view(ax,62,31);
-        lighting(ax,'gouraud');
-        ax.XTick = []; ax.YTick = []; ax.ZTick = [];
+    if ~isfield(opt,'fancy')||opt.fancy
+        xlabel(ax,"X"); ylabel(ax,"Y"); zlabel(ax,"Z");
+        c=colorbar(ax); c.Label.String = pName; colormap(ax,"jet");
+        lighting(ax,'flat');
         ax.BoxStyle = 'full';
-        camlight(ax);
         axis(ax,'manual','vis3d','equal','tight');
+        rotate3d(ax,'on');
     end
 end
 end

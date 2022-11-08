@@ -1,4 +1,4 @@
-function h = plotHistogram(ax,FV,pName,opts)
+function h = plotHistogram(data,pName,opts,ax)
 %% Function to calculate area weighted histograms
 % Inputs:
 % ax   - axis to plot on
@@ -7,34 +7,50 @@ function h = plotHistogram(ax,FV,pName,opts)
 %Outputs can be used in a plot/bar chart ex: plot(cax,y,yp);
 % [x, yp, yc] - [Values of bin centres,...
 %       Probability of a value falling within a bin,...
-%       Cumulative probability distribution] 
+%       Cumulative probability distribution]
+arguments
+    data = [];
+    pName string = [];
+    opts = [];
+    ax = [];
+end
+
+if isempty(ax)
+    figure; ax = gca; view(3);
+end
 
 pID = convertStringsToChars(extractBefore(pName+' ', ' '));
 
-if isfield(FV,pID)
-    x_in = FV.(pID);
-elseif isfield(FV.Fproperty,pID)
-    x_in = FV.Fproperty.(pID);
+if isfield(data.FV,pID) % FV General Property
+    x_in = data.FV.(pID);
+elseif isfield(data.FV.Fproperty,pID) % Face Property
+    x_in = data.FV.Fproperty.(pID);
     try
-        a_in = FV.Fproperty.area;
+        a_in = data.FV.Fproperty.area;
     catch
         a_in = ones(size(x_in));
     end
-elseif isfield(FV.Vproperty,pID)
-    x_in = FV.Vproperty.(pID);
+elseif isfield(data.FV.Vproperty,pID) % Vertex Property
+    x_in = data.FV.Vproperty.(pID);
+    a_in = ones(size(x_in));
+elseif isfield(data.F.property,pID) % Field Property
+    
+    x_in = data.F.property.(pID);
+    [l,w,h] = size(x_in);
+    x_in = reshape(x_in,[l*w*h,1,1]); % Flatten
     a_in = ones(size(x_in));
 else
     x_in = [0 1];
-    pName = "Data does not exist";
     a_in = ones(size(x_in));
+    pName = "Data does not exist";
 end
 
-
 if isfield(opts,'n')
-    n = opts.n;
+    n = max(ceil(opts.n+1),2);
 else
     n = 100;
 end
+
 
 temp = prctile(x_in,[0.2 99.8]);
 try
