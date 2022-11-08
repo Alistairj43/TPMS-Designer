@@ -177,9 +177,8 @@ classdef v3Field
             end
 
             if isempty(ax)
-                figure; ax = gca;
+                figure; ax = gca; rotate3d(ax,'on'); view(ax,62,31);
             end
-
 
             pID = convertStringsToChars(extractBefore(pName+" ", " "));
             if isfield(F.property,pID)
@@ -197,7 +196,7 @@ classdef v3Field
             elseif strcmp(zslice,'orthoslice')
                 h = orthosliceViewer(cData,'Parent',ax.Parent,'Colormap',[0 0 0; flipud(jet)]);
             else
-                h = plotVoxel(ax,F,pName,opt);
+                h = plotVoxel(F,pName,opt,ax);
             end
         end
 

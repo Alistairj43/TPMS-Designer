@@ -1,4 +1,4 @@
-function h =plotVoxel(ax,data,pName,opt)
+function h =plotVoxel(data,pName,opt,ax)
 %% Function plots a voxelated patch, coloured by "property"
 % Inputs:   ax              - Handle to axis to plot on
 %           data            - surfaceMesh object containing FV data
@@ -7,10 +7,10 @@ function h =plotVoxel(ax,data,pName,opt)
 %
 %   Credit: Alistair Jones, 2022, RMIT University
 arguments
-    ax = [];
     data = [];
     pName string = 'solid';
     opt = [];
+    ax = [];
 end
 
 if isempty(ax)
