@@ -87,10 +87,9 @@ classdef UnitCell
                     R = 1; r = 0.1;
                     UnitCell.u = @(x,y,z) (sqrt((x-pi).^2+(y-pi).^2)-R).^2+(z-pi).^2-r.^2;
                 case "BCC"
-                        pathname = 'data/lattices/BCC.txt';
-                        [nodes,struts] = readLattice(pathname);
-                        UnitCell.u.nodes = nodes;
-                        UnitCell.u.struts = struts;
+                    [UnitCell.u.nodes,UnitCell.u.struts] = readLattice('data/lattices/BCC.txt');
+                case "BCCXYZ"
+                    [UnitCell.u.nodes,UnitCell.u.struts] = readLattice('data/lattices/BCCXYZ.txt');
                 otherwise
                     if endsWith(UnitCell.equation,'.txt')
                         [nodes,struts] = readLattice(UnitCell.equation);
@@ -235,7 +234,7 @@ classdef UnitCell
                         case "surface"
                             UnitCell.F.property.U = (UnitCell.u(X,Y,Z)-UnitCell.v1+UnitCell.v2).*(UnitCell.u(X,Y,Z)+UnitCell.v1+UnitCell.v2);
                         case "double"
-                            UnitCell.F.property.U = (UnitCell.u(X,Y,Z)+UnitCell.v1).*(UnitCell.u(X,Y,Z)-UnitCell.v2);
+                            UnitCell.F.property.U = (UnitCell.u(X,Y,Z)+UnitCell.v1).*(UnitCell.u(X,Y,Z)+UnitCell.v2);
                         case "single"
                             UnitCell.F.property.U = UnitCell.u(X,Y,Z)+UnitCell.v1;
                         otherwise

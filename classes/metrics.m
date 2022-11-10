@@ -100,7 +100,6 @@ classdef metrics
             M.thicknessAM = mean(F.zSlices.maxthickness);
 
             %Calculate pore diameter (Pad to account for periodicity)
-            
             tempArray = bwdist(padarray(padarray(F.property.solid,ceil(F.res),'circular','both'),[1 1 1],1,'both')); 
             M.poreDiameter = 2*F.voxelSize(1)*max(tempArray,[],'all');
 
