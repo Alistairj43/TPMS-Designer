@@ -17,16 +17,10 @@ syms x y z;
 assume(x,'real'); assume(y,'real'); assume(z,'real');
 
 %Apply the scaling of the unit cell before differentiation
-xyz = 2*pi*[x y z]./[TPMS.cellSize];
-
-if TPMS.type=="network"||TPMS.type=="single"
-    U = TPMS.u;
-else
-    U = matlabFunction((TPMS.u(x,y,z)).^2);
-end
+%xyz = 2*pi*[x y z]./[TPMS.cellSize];
 
 % Create implicit functions for MC and GC using differential geometry
-G = gradient(U(xyz(1),xyz(2),xyz(3)));
+G = gradient(TPMS.u(x,y,z));
 G2 = [gradient(G(1),[x y z]) gradient(G(2),[x y z]) gradient(G(3),[x y z])];
 K = det([G2' G; G' 0]);
 H = -1/2*divergence(G/norm(G));

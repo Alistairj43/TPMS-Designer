@@ -10,6 +10,7 @@ classdef UnitCell
     properties
         type % Type of Cell equation 
         equation % - Equation or path to file describing
+        eqn % Equation showing parameters
         u % Data/Equation describing features
         v1 % Geometry Parameter 1
         v2 % Geometry Parameter 2
@@ -18,10 +19,11 @@ classdef UnitCell
         FV % SurfaceMesh Object
         F % V3Field Object
         M % Metrics Object
+        B % Object describing the bulk object
     end
     
     methods
-        function UnitCell = UnitCell(type,equation,v1,v2,res,cellSize)
+        function UnitCell = UnitCell(type,equation,v1,v2,res,cellSize,B)
             %Constructor for to initialising the UnitCell object 
             %   Inputs:
             %       type - (string) The type of unit cell (default = "network")
@@ -31,6 +33,8 @@ classdef UnitCell
             %       v2 - (double) Second geometric parameter (defualt = 0.5) 
             %       res - (1,3)(double) Resolution of cell in x,y,z (default = [30 30 30]) 
             %       cellSize - (1,3)(double) Size of cell in x,y,z (default = [10 10 10])
+            %       B - Structure descirbing the bulk size of the
+            %           object, includes a minimum and maxium bounding box coord and possibly other fields to describe the region)
             %   Outputs:
             %   Unit Cell - (UnitCell) UnitCell object
             arguments
@@ -39,7 +43,8 @@ classdef UnitCell
                 v1 double = 0.5; % Geometry parameter 1
                 v2 double = 0; % Geometry parameter 2
                 res (1,3) double = [30 30 30];
-                cellSize (1,3) double = [10 10 10];
+                cellSize (1,3) double = [100 100 100];
+                B = [];
             end
             UnitCell.equation = equation;
             UnitCell.type = type;
@@ -48,37 +53,45 @@ classdef UnitCell
             UnitCell.res = res;
             UnitCell.cellSize = cellSize;
             UnitCell.M = metrics();
-            A = [];
 
+            if isempty(B) % Default bulk size is one unit cell starting at the origin
+                UnitCell.B = bulkSize('box',cellSize);
+            else
+                UnitCell.B = B;
+            end
+
+
+            A = [];
+            ax = 2*pi./cellSize(1); ay = 2*pi./cellSize(2); az = 2*pi./cellSize(3);
             switch UnitCell.equation
                 case "Diamond"
-                    UnitCell.u = @(x,y,z) ((sin(x).*sin(y).*sin(z)+...
-                        sin(x).*cos(y).*cos(z)+...
-                        cos(x).*sin(y).*cos(z)+...
-                        cos(x).*cos(y).*sin(z)));
+                    UnitCell.u = @(x,y,z) ((sin(ax.*x).*sin(ay.*y).*sin(az.*z)+...
+                        sin(ax.*x).*cos(ay.*y).*cos(az.*z)+...
+                        cos(ax.*x).*sin(ay.*y).*cos(az.*z)+...
+                        cos(ax.*x).*cos(ay.*y).*sin(az.*z)));
                     A = 1/sqrt(2)*0.5844;
                 case "Gyroid"
-                    UnitCell.u = @(x,y,z) (cos(x).*sin(y)+ ...
-                        cos(y).*sin(z)+cos(z).*sin(x));
+                    UnitCell.u = @(x,y,z) (cos(ax.*x).*sin(ay.*y)+ ...
+                        cos(ay.*y).*sin(az.*z)+cos(az.*z).*sin(ax.*x));
                     A = 2/3*0.4964;
                 case "Primitive"
-                    UnitCell.u = @(x,y,z) (cos(x)+cos(y)+cos(z));
+                    UnitCell.u = @(x,y,z) (cos(ax.*x)+cos(ay.*y)+cos(az.*z));
                     A = 1/3*0.8491;
                 case "IWP"
-                    UnitCell.u = @(x,y,z) 2*(cos(x).*cos(y)+cos(y).*cos(z)+...
-                        cos(z).*cos(x))...
+                    UnitCell.u = @(x,y,z) 2*(cos(ax.*x).*cos(ay.*y)+cos(ay.*y).*cos(az.*z)+...
+                        cos(az.*z).*cos(ax.*x))...
                         -(cos(2*x)+ cos(2*y)+ cos(2*z));
                     A = 40.82;
                 case "Neovius"
-                    UnitCell.u = @(x,y,z) (3*(cos(x)+cos(y)+cos(z))+4*cos(x).*cos(y).*cos(z));
+                    UnitCell.u = @(x,y,z) (3*(cos(ax.*x)+cos(ay.*y)+cos(az.*z))+4*cos(ax.*x).*cos(ay.*y).*cos(az.*z));
                     A = 1/13;
                 case "FRD"
-                    UnitCell.u = @(x,y,z) 4*cos(x).*cos(y).*cos(z)-(cos(2*x).*cos(2*y)...
+                    UnitCell.u = @(x,y,z) 4*cos(ax.*x).*cos(ay.*y).*cos(az.*z)-(cos(2*x).*cos(2*y)...
                         +cos(2*y).*cos(2*z)+cos(2*z).*cos(2*x));
                     A = 40.82;
                 case "Sinusoidal"
-                    UnitCell.u = @(x,y,z) sin(x)+...
-                        sin(y)-(z-pi);
+                    UnitCell.u = @(x,y,z) sin(ax.*x)+...
+                        sin(ay.*y)-(z-pi);
                 case "Sphere"
                     UnitCell.u = @(x,y,z)(x-pi).^2+(y-pi).^2+(z-pi).^2-2;
                 case "P-normCube"
@@ -99,6 +112,7 @@ classdef UnitCell
                         UnitCell.u = str2func(UnitCell.equation);
                     end
             end
+
             
             if ~isempty(A)
                 switch UnitCell.type
@@ -214,33 +228,26 @@ classdef UnitCell
             % Start the timer
             tic; 
 
+
             % Compute SDF and properties
             if isempty(UnitCell.F)
                 if strcmp(UnitCell.type,'lattice') %Handle Lattices
-                    lower = [0 0 0];
-                    UnitCell.F = v3Field('lattice',UnitCell.u,UnitCell.res,UnitCell.v1,UnitCell.v2,lower,UnitCell.cellSize);
+                    UnitCell.u.rstrut = UnitCell.v1;
+                    UnitCell.u.rnode = UnitCell.v2;
+                    UnitCell.F = v3Field('lattice',UnitCell.u,UnitCell.res,UnitCell.B);
                 else
-                    % Initialise the Field
-                    UnitCell.F = v3Field("empty",[],ceil(UnitCell.res),0,0,[0 0 0],UnitCell.cellSize);  % Move to discretized space centred at origin
-                    
-                    % Scale to cell lengths
-                    X = UnitCell.F.property.X.*2.*pi./UnitCell.cellSize(1);
-                    Y = UnitCell.F.property.Y.*2.*pi./UnitCell.cellSize(2);
-                    Z = UnitCell.F.property.Z.*2.*pi./UnitCell.cellSize(3);
-                    
-                    % Calculate the SDF based on the type and equation
-                    % stored in UnitCell.u
+                    % Initialise the Field for the TPMS using equation u.
                     switch UnitCell.type
                         case "surface"
-                            UnitCell.F.property.U = (UnitCell.u(X,Y,Z)-UnitCell.v1+UnitCell.v2).*(UnitCell.u(X,Y,Z)+UnitCell.v1+UnitCell.v2);
+                            temp = @(x,y,z)(UnitCell.u(x,y,z)-UnitCell.v1+UnitCell.v2).*(UnitCell.u(x,y,z)+UnitCell.v1+UnitCell.v2);
                         case "double"
-                            UnitCell.F.property.U = (UnitCell.u(X,Y,Z)+UnitCell.v1).*(UnitCell.u(X,Y,Z)+UnitCell.v2);
+                            temp = @(x,y,z)(UnitCell.u(x,y,z)+UnitCell.v1).*(UnitCell.u(x,y,z)+UnitCell.v2);
                         case "single"
-                            UnitCell.F.property.U = UnitCell.u(X,Y,Z)+UnitCell.v1;
+                            temp = @(x,y,z)UnitCell.u(x,y,z)+UnitCell.v1;
                         otherwise
-                            UnitCell.F.property.U = UnitCell.u(X,Y,Z)+UnitCell.v1;
+                            temp = @(x,y,z)UnitCell.u(x,y,z)+UnitCell.v1;
                     end
-                    UnitCell.F.property.solid = double(UnitCell.F.property.U<0);
+                    UnitCell.F = v3Field("TPMS",temp,ceil(UnitCell.res),UnitCell.B);  % Move to discretized space centred at origin
                 end
             end
 

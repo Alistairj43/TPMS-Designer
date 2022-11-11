@@ -51,7 +51,6 @@ classdef surfaceMesh
                 if ~isfield(fields,'name')
                     FV.name = inputname(2);
                 end
-                
             elseif contains(varargin{1},'stl','IgnoreCase',true)
                 % Construct from stl import
                 TR = stlread(string(varargin(2)));
@@ -262,7 +261,7 @@ classdef surfaceMesh
             end
             [lower, upper] = bounds(FV.vertices);
             res = ceil((upper-lower)./voxelSize);
-            F = V3Field("FV",FV,res,0,0,lower,upper);
+            F = v3Field("FV",FV,res,0,0,lower,upper);
             F.name = FV.name;
         end
     end

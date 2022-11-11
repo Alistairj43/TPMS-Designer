@@ -27,36 +27,57 @@ classdef v3Field
     end
 
     methods
-        function F = v3Field(method,data,res,rstrut,rnode,lower,upper)
-            %V3Field(method,data,res,rstrut,rnode,lower,upper) construct an instance of this class
+        function F = v3Field(method,data,res,region)
+            %v3Field(method,data,res,region) construct an instance of this class
             %   optional inputs:
-            %             res (3,1) double = [30; 30; 30];
-            %             lower (3,1) double = [0; 0; 0];
-            %             upper (3,1) double = [10; 10; 10];
             %             method -> defines the method to be used = "flow"
             %             data -> the data to generate the v3field
+            %             res (3,1) double = [30; 30; 30];
+            %             region - bulkSize object describing the design
+            %               volume
+            %
             %   returns: the v3Field object
             arguments
                 method string = "sample";
                 data = [];
                 res (1,3) double = [30 30 30];
-                rstrut (1,1) double = 0.05;
-                rnode (1,1) double = 0.05;
-                lower (1,3) double = [0 0 0];
-                upper (1,3) double = [1 1 1];
+                region = [];
             end
+
+            % Determine the bounds
+            if isempty(region)
+                F.lower = [0.0 0.0 0.0];
+                F.upper = [1.0 1.0 1.0];
+            else
+                F.lower = region.bbox(1,:);
+                F.upper = region.bbox(2,:);
+            end
+
+            % Settup The Meshgrid
             F.res = res;
-            F.lower = lower;
-            F.upper = upper;
-            F.voxelSize = (upper-lower)./res;
-            F.xq = linspace(lower(1),upper(1),res(1));
-            F.yq = linspace(lower(2),upper(2),res(2));
-            F.zq = linspace(lower(3),upper(3),res(3));
+            F.voxelSize = (F.upper-F.lower)./res;
+            F.xq = linspace(F.lower(1),F.upper(1),res(1));
+            F.yq = linspace(F.lower(2),F.upper(2),res(2));
+            F.zq = linspace(F.lower(3),F.upper(3),res(3));
             [F.property.X,F.property.Y,F.property.Z] = meshgrid(F.xq,F.yq,F.zq);
+
+            if ~isempty(region)
+                switch region.method
+                    case 'FV'
+                        temp.faces = region.FV.faces;
+                        temp.vertices = 1+(1-1./res).*((region.FV.vertices-F.lower)./F.voxelSize);
+                        tsurface = 1.0*voxelateMesh(temp,[res(2),res(1),res(3)],'wrap',true);
+                        tsolid = imfill(1.0*tsurface);
+                    otherwise
+                        tsolid = [];
+                end
+            end
+
+
             switch method
                 case "FV"
                     temp.faces = data.faces;
-                    temp.vertices = 1+(1-1./res).*((data.vertices-lower)./F.voxelSize);
+                    temp.vertices = 1+(1-1./res).*((data.vertices-F.lower)./F.voxelSize);
                     F.property.surface = 1.0*voxelateMesh(temp,[res(2),res(1),res(3)],'wrap',true);
                     F.property.solid = imfill(1.0*F.property.surface);
                     F.property.U = double(1.0.*(bwdist(F.property.solid)-bwdist(1.0-F.property.solid)));
@@ -67,7 +88,6 @@ classdef v3Field
                     if isstring(data)
                         filepath = strcat("data/lattices/",data,".txt");
                         [nodes,struts] = readStrut(filepath); % get the information of strut
-
                     elseif isfield(data,'nodes')
                         nodes = data.nodes;
                         struts = data.struts;
@@ -75,7 +95,28 @@ classdef v3Field
                         filepath = "data/lattices/BCC.txt";
                         [nodes,struts] = readStrut(filepath); % get the information of strut
                     end
+
+                    if isfield(data,'rnode')
+                        rnode = data.rnode;
+                    else
+                        rnode = 0.1;
+                    end
+
+                    if isfield(data,'rstrut')
+                        rstrut = data.rnode;
+                    else
+                        rstrut = 0.1;
+                    end
+
                     [F.property.solid, F.property.U] = voxelateLattice(F.property.X,F.property.Y,F.property.Z,[F.lower; F.upper],nodes,struts,rstrut,rnode);
+                case "TPMS"
+                    F.property.U = data(F.property.X,F.property.Y,F.property.Z);
+                    if size(tsolid,1)==size(F.property.U,1)
+                        F.property.solid = 1.0*(F.property.U<=0).*tsolid;
+                        F.property.U = double(1.0.*(bwdist(F.property.solid)-bwdist(1.0-F.property.solid)));
+                    else
+                        F.property.solid = 1.0*(F.property.U<=0);
+                    end
             end
         end
 
