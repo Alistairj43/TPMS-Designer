@@ -30,8 +30,7 @@ classdef surfaceMesh
             %   FV = surfaceMesh() Creates an empty array
             %   FV = surfaceMesh('stl','path/object.stl',..) imports .stl from path 
             %   FV = surfaceMesh('fv',FV) directly specify FV structure with matching
-            %   FV = surfaceMesh('v3field',field) for use with V3Field
-            %       properties
+            %   FV = surfaceMesh('TPMS',UnitCell) for use with a TPMS
             %   FV = surfaceMesh(...,0) calculate first derivative properties
             %   FV = surfaceMesh(...,1) calculatre all properties (default)
             if nargin == 0
@@ -57,16 +56,29 @@ classdef surfaceMesh
                 FV.faces = TR.ConnectivityList;
                 FV.vertices = TR.Points;
                 FV.name = string(varargin(2));                
-            elseif contains(varargin{1},'v3field','IgnoreCase',true)
-                [f, v] = isosurface(varargin{2}.property.X,varargin{2}.property.Y,varargin{2}.property.Z,varargin{2}.property.U,0);
+            elseif contains(varargin{1},'TPMS','IgnoreCase',true)
+                [f, v] = isosurface(varargin{2}.F.property.X,varargin{2}.F.property.Y,varargin{2}.F.property.Z,varargin{2}.F.property.U,0);
                 [FV.faces,FV.vertices]=cleanMesh(f, v);
 
 
-                [fc, vc] = isocaps(varargin{2}.property.X,varargin{2}.property.Y,varargin{2}.property.Z,-varargin{2}.property.U,0,'above');
-                if ~isempty(fc)
-                    fc = fliplr(fc); % Fix normals to point outwards
-                    [FV.facesc, FV.verticesc] = cleanMesh(fc, vc);
+                switch varargin{2}.B.method
+%                     case 'FV' % This case is in development - requiring mesh boolean tools
+%                         [fc, vc] = isocaps(varargin{2}.F.property.X,varargin{2}.F.property.Y,varargin{2}.F.property.Z,varargin{2}.F.property.U,0,'below');
+%                         fc = fliplr(fc); % Fix normals to point outwards
+%                         [FV.faces,FV.vertices]=mergeMesh({f fc},{v vc});
+%                         f = varargin{2}.B.FV.faces;
+%                         v = varargin{2}.B.FV.vertices;
+%                         [FV.vertices,FV.faces]=surfboolean(FV.vertices,FV.faces,'and',v,f); 
+                    otherwise % General Case
+                        [fc, vc] = isocaps(varargin{2}.F.property.X,varargin{2}.F.property.Y,varargin{2}.F.property.Z,-varargin{2}.F.property.U,0,'above');
+                        if ~isempty(fc)
+                            fc = fliplr(fc); % Fix normals to point outwards
+                            [FV.facesc, FV.verticesc] = cleanMesh(fc, vc);
+                        end
                 end
+
+
+
             end
         end
         

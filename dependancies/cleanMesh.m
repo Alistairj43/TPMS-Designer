@@ -10,10 +10,10 @@ if ~isempty(F)&&~isempty(V)&&length(F)>1
     VD=(V_E1-V_E2);
     D=sqrt(sum(VD.^2,2));
     mean_D=mean(D); %Mean across array
-    numDigitsMerge=6-numOrder(mean_D); %base number of digits on mean
+    numDigitsMerge=6-round(log10(abs(mean_D))); %base number of digits on mean
 
     % Merge Close Vertices
-    [~,indKeep,indFix]=unique(pround(V,numDigitsMerge),'rows');
+    [~,indKeep,indFix]=unique(round(V.*(10^numDigitsMerge))./(10^numDigitsMerge),'rows');
     V=V(indKeep,:);
     F=indFix(F); %Fix indices in F
 

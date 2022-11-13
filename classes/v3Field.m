@@ -27,7 +27,7 @@ classdef v3Field
     end
 
     methods
-        function F = v3Field(method,data,res,region)
+        function F = v3Field(method,data,res,region,tform)
             %v3Field(method,data,res,region) construct an instance of this class
             %   optional inputs:
             %             method -> defines the method to be used = "flow"
@@ -42,12 +42,13 @@ classdef v3Field
                 data = [];
                 res (1,3) double = [30 30 30];
                 region = [];
+                tform = rigidtform3d;
             end
 
             % Determine the bounds
             if isempty(region)
-                F.lower = [0.0 0.0 0.0];
-                F.upper = [1.0 1.0 1.0];
+                F.lower = [-0.5 -0.5 -0.5];
+                F.upper = [0.5 0.5 0.5];
             else
                 F.lower = region.bbox(1,:);
                 F.upper = region.bbox(2,:);
@@ -61,18 +62,8 @@ classdef v3Field
             F.zq = linspace(F.lower(3),F.upper(3),res(3));
             [F.property.X,F.property.Y,F.property.Z] = meshgrid(F.xq,F.yq,F.zq);
 
-            if ~isempty(region)
-                switch region.method
-                    case 'FV'
-                        temp.faces = region.FV.faces;
-                        temp.vertices = 1+(1-1./res).*((region.FV.vertices-F.lower)./F.voxelSize);
-                        tsurface = 1.0*voxelateMesh(temp,[res(2),res(1),res(3)],'wrap',true);
-                        tsolid = imfill(1.0*tsurface);
-                    otherwise
-                        tsolid = [];
-                end
-            end
-
+            %Apply transformations
+            [Xt, Yt, Zt] = transformPointsInverse(tform,F.property.X,F.property.Y,F.property.Z);
 
             switch method
                 case "FV"
@@ -103,20 +94,14 @@ classdef v3Field
                     end
 
                     if isfield(data,'rstrut')
-                        rstrut = data.rnode;
+                        rstrut = data.rstrut;
                     else
                         rstrut = 0.1;
                     end
-
-                    [F.property.solid, F.property.U] = voxelateLattice(F.property.X,F.property.Y,F.property.Z,[F.lower; F.upper],nodes,struts,rstrut,rnode);
+                    [F.property.solid, F.property.U] = voxelateLattice(Xt,Yt,Zt,[F.lower; F.upper],nodes,struts,rstrut,rnode);
                 case "TPMS"
-                    F.property.U = data(F.property.X,F.property.Y,F.property.Z);
-                    if size(tsolid,1)==size(F.property.U,1)
-                        F.property.solid = 1.0*(F.property.U<=0).*tsolid;
-                        F.property.U = double(1.0.*(bwdist(F.property.solid)-bwdist(1.0-F.property.solid)));
-                    else
-                        F.property.solid = 1.0*(F.property.U<=0);
-                    end
+                    F.property.U = data(Xt,Yt,Zt);
+                    F.property.solid = 1.0*(F.property.U<=0);
             end
         end
 
@@ -132,11 +117,12 @@ classdef v3Field
             end
             p = F.property;
 
-            % Computationally cheap properties
-            [~,p.V3Azimuth,elevation] = imgradient3(imgaussfilt3(F.property.U, 0.5),'sobel');
-            p.V3inclination = 90+elevation;
+
 
             if strcmp("implicit",method) % Use implicit differentiation to calculate proeprties
+                % Computationally cheap properties
+                [~,p.V3Azimuth,elevation] = imgradient3(imgaussfilt3(F.property.U, 0.5),'sobel');
+                p.V3inclination = 90+elevation;
                 [l, w, h] = size(F.property.X);
                 points = [reshape(F.property.X,[l*w*h,1,1]) reshape(F.property.Y,[l*w*h,1,1]) reshape(F.property.Z,[l*w*h,1,1])];
                 [GC, MC, k1, k2] = curvatureImplicit(TPMS,points);
@@ -153,7 +139,6 @@ classdef v3Field
             H = 1/(c^3*(2*pi)^(3/2)).*exp(-(q1.^2+q2.^2+q3.^2)/(2*c^2)); % Make weightings with gaussian distribution
             H(:,:,ceil((n/2)+1):n) = c1.*H(:,:,ceil((n/2)+1):n); % Set top half equal to 0.1
             H(:,:,ceil((n/2))) = c2.*H(:,:,ceil((n/2))); % Set current plane properties
-
 
             temp = zeros(size(F.property.solid,1)+2*n,size(F.property.solid,2)+2*n,size(F.property.solid,3)+n); % "Air" Padding
             temp(:,:,1:n) = ones(size(F.property.solid,1)+2*n,size(F.property.solid,2)+2*n,n); % "Build Platten" Padding Below
