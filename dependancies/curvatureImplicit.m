@@ -34,6 +34,10 @@ GCf = matlabFunction(-K/(G'*G).^2,'Vars',[x y z]);
 %rY = [cosd(TPMS.Rxyz(2)) 0 -sind(TPMS.Rxyz(2)); 0 1 0; sind(TPMS.Rxyz(2)) 0 cosd(TPMS.Rxyz(2))];
 %rX = [1 0 0; 0 cosd(TPMS.Rxyz(1)) -sind(TPMS.Rxyz(1)); 0 sind(TPMS.Rxyz(1)) cosd(TPMS.Rxyz(1))];
 trans = [0 0 0]; %trans = [TPMS.offset(1) TPMS.offset(2) TPMS.offset(3)];
+
+
+
+
 pad = [0; 0; 0]; T = eye(3);%T = rX*rY*rZ;
 tform=affine3d([T pad; trans 1]);
 points = transformPointsInverse(tform,points);

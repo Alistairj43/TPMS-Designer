@@ -196,7 +196,7 @@ classdef surfaceMesh
                 p2Name string = [];
                 caps double = 0.6;
                 opts = [];
-                ax = gca;
+                ax = [];
             end
             
             h = []; % Create empty object to return
@@ -273,7 +273,8 @@ classdef surfaceMesh
             end
             [lower, upper] = bounds(FV.vertices);
             res = ceil((upper-lower)./voxelSize);
-            F = v3Field("FV",FV,res,0,0,lower,upper);
+            region = bulkSize('FV',FV);
+            F = v3Field("FV",FV,res,region); %F = v3Field(method,data,res,region,tform)
             F.name = FV.name;
         end
     end

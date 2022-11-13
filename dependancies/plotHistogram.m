@@ -21,28 +21,31 @@ end
 
 pID = convertStringsToChars(extractBefore(pName+' ', ' '));
 
-if isfield(data.FV,pID) % FV General Property
-    x_in = data.FV.(pID);
-elseif isfield(data.FV.Fproperty,pID) % Face Property
-    x_in = data.FV.Fproperty.(pID);
-    try
-        a_in = data.FV.Fproperty.area;
-    catch
-        a_in = ones(size(x_in));
-    end
-elseif isfield(data.FV.Vproperty,pID) % Vertex Property
-    x_in = data.FV.Vproperty.(pID);
-    a_in = ones(size(x_in));
-elseif isfield(data.F.property,pID) % Field Property
-    
+if isfield(data,'F')&&isfield(data.F,'property')&&isfield(data.F.property,pID)
     x_in = data.F.property.(pID);
     [l,w,h] = size(x_in);
     x_in = reshape(x_in,[l*w*h,1,1]); % Flatten
     a_in = ones(size(x_in));
+elseif isfield(data,'FV')
+    data = data.FV;
+end
+
+if isfield(data,pID) % FV General Property
+    x_in = data.(pID);
+elseif isfield(data.Fproperty,pID) % Face Property
+    x_in = data.Fproperty.(pID);
+    try
+        a_in = data.Fproperty.area;
+    catch
+        a_in = ones(size(x_in)); % Face areas not found
+    end
+elseif isfield(data.Vproperty,pID) % Vertex Property
+    x_in = data.Vproperty.(pID);
+    a_in = ones(size(x_in));
 else
     x_in = [0 1];
     a_in = ones(size(x_in));
-    pName = "Data does not exist";
+    pName = "Data not found";
 end
 
 if isfield(opts,'n')
@@ -50,7 +53,6 @@ if isfield(opts,'n')
 else
     n = 100;
 end
-
 
 temp = prctile(x_in,[0.2 99.8]);
 try

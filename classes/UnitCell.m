@@ -43,7 +43,7 @@ classdef UnitCell
                 v1 double = 0.5; % Geometry parameter 1
                 v2 double = 0; % Geometry parameter 2
                 res (1,3) double = [30 30 30];
-                tform = rigidtform3d; % see affinetform3d()
+                tform = []; % see affinetform3d()
                 B = [];
             end
             UnitCell.equation = equation;
@@ -51,8 +51,14 @@ classdef UnitCell
             UnitCell.v1 = v1;
             UnitCell.v2 = v2;
             UnitCell.res = res;
-            UnitCell.tform = tform;
+            
             UnitCell.M = metrics();
+
+            if isempty(tform)
+                UnitCell.tform = rigidtform3d;
+            else
+                UnitCell.tform = tform;
+            end
 
             if isempty(B) % Default bulk size is one unit cell starting at the origin
                 temp = diag(tform.A);

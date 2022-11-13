@@ -42,7 +42,7 @@ classdef v3Field
                 data = [];
                 res (1,3) double = [30 30 30];
                 region = [];
-                tform = rigidtform3d;
+                tform = [];
             end
 
             % Determine the bounds
@@ -61,9 +61,11 @@ classdef v3Field
             F.yq = linspace(F.lower(2),F.upper(2),res(2));
             F.zq = linspace(F.lower(3),F.upper(3),res(3));
             [F.property.X,F.property.Y,F.property.Z] = meshgrid(F.xq,F.yq,F.zq);
-
-            %Apply transformations
-            [Xt, Yt, Zt] = transformPointsInverse(tform,F.property.X,F.property.Y,F.property.Z);
+            if ~isempty(tform)
+                [Xt, Yt, Zt] = transformPointsInverse(tform,F.property.X,F.property.Y,F.property.Z);
+            else
+                Xt = F.property.X; Yt =F.property.Y; Zt = F.property.Z;
+            end
 
             switch method
                 case "FV"
@@ -203,7 +205,10 @@ classdef v3Field
             end
 
             if isempty(ax)
-                figure; ax = gca; rotate3d(ax,'on'); view(ax,62,31);
+                figure; ax = gca; 
+                if ~isnumeric(zslice)
+                    rotate3d(ax,'on'); view(ax,62,31); % Set 3D view as nessecary
+                end
             end
 
             pID = convertStringsToChars(extractBefore(pName+" ", " "));
@@ -218,8 +223,9 @@ classdef v3Field
                 [Xq, Yq, Zq] = ndgrid(F.xq,F.yq,z);
                 xyslice = interp3(F.xq,F.yq,F.zq,cData,Xq,Yq,Zq);
                 h = surf(ax,Yq,Xq,Zq,xyslice,'LineStyle','none');
-                colormap(ax,"jet");
+                colormap(ax,"jet"); view(ax,2);
             elseif strcmp(zslice,'orthoslice')
+                cData(isnan(cData))=-1;
                 h = orthosliceViewer(cData,'Parent',ax.Parent,'Colormap',[0 0 0; flipud(jet)]);
             else
                 h = plotVoxel(F,pName,opt,ax);
