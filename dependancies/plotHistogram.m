@@ -21,45 +21,67 @@ end
 
 pID = convertStringsToChars(extractBefore(pName+' ', ' '));
 
-if isfield(data,'F')&&isfield(data.F,'property')&&isfield(data.F.property,pID)
-    x_in = data.F.property.(pID);
-    [l,w,h] = size(x_in);
-    x_in = reshape(x_in,[l*w*h,1,1]); % Flatten
-    a_in = ones(size(x_in));
-elseif isfield(data,'FV')
-    data = data.FV;
-end
-
-if isfield(data,pID) % FV General Property
-    x_in = data.(pID);
-elseif isfield(data.Fproperty,pID) % Face Property
-    x_in = data.Fproperty.(pID);
-    try
-        a_in = data.Fproperty.area;
-    catch
-        a_in = ones(size(x_in)); % Face areas not found
-    end
-elseif isfield(data.Vproperty,pID) % Vertex Property
-    x_in = data.Vproperty.(pID);
-    a_in = ones(size(x_in));
-else
-    x_in = [0 1];
-    a_in = ones(size(x_in));
-    pName = "Data not found";
-end
-
 if isfield(opts,'n')
     n = max(ceil(opts.n+1),2);
 else
     n = 100;
 end
 
-temp = prctile(x_in,[0.2 99.8]);
 try
-    binEdges = linspace(temp(1),temp(2),n);
+    if isa(data,'UnitCell')
+        if isfield(data.FV.Fproperty,pID)
+            % Face property
+            x_in = data.FV.Fproperty.(pID);
+            try a_in = data.FV.Fproperty.area;
+            catch; a_in = ones(size(x_in)); % Face areas not found
+            end
+        elseif isfield(data.FV.Vproperty,pID)
+            % Vertex Property
+            x_in = data.FV.Vproperty.(pID);
+            a_in = ones(size(x_in));
+        else
+            % F property
+            x_in = data.F.property.(pID);
+            [l,w,h] = size(x_in);
+            x_in = reshape(x_in,[l*w*h,1,1]); % Flatten
+            a_in = ones(size(x_in));
+        end
+    elseif isa(data,'surfaceMesh')
+        if isfield(data.Fproperty,pID)
+            % Face property
+            x_in = data.Fproperty.(pID);
+            try a_in = data.Fproperty.area;
+            catch; a_in = ones(size(x_in)); % Face areas not found
+            end
+        else
+            % Vertex Property
+            x_in = data.Vproperty.(pID);
+            a_in = ones(size(x_in));
+        end
+    else % Couldn't determine type, assume raw data
+        x_in = data;
+        [l,w,h] = size(x_in);
+        x_in = reshape(x_in,[l*w*h,1,1]); % Flatten
+        a_in = ones(size_x_in);
+    end
 catch
-    binEdges = linspace(0,1,n);
+    % Failed to validly find dataset
+    x_in = [0 1];
+    a_in = ones(size(x_in));
+    pName = "Property data not found for: " + pName;
+    n = 2;
 end
+
+temp = prctile(x_in,[0.2 99.8]);
+
+if temp(1)==temp(2) % For datasets with no range
+    temp(2) = temp(2)+0.5;
+    temp(1) = temp(1)-0.5;
+    n = 2;
+    pName = "Data may not exist for: " + pName;
+end
+
+binEdges = linspace(temp(1),temp(2),n);
 
 x = (binEdges(2:end)+binEdges(1:end-1))/2;
 totalA = sum(a_in,"all","omitnan");

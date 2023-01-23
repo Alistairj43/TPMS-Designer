@@ -76,9 +76,6 @@ classdef surfaceMesh
                             [FV.facesc, FV.verticesc] = cleanMesh(fc, vc);
                         end
                 end
-
-
-
             end
         end
         
@@ -257,8 +254,17 @@ classdef surfaceMesh
                 filename string = "TPMSObject.stl";
             end
             
-            tri=triangulation(FV.faces,FV.vertices);
-            stlwrite(tri,filename,"binary");
+            % Merge isocap with isosurface
+            try
+                F = [FV.faces; FV.facesc+length(FV.vertices)];
+                V = [FV.vertices; FV.verticesc];
+            catch
+                F = FV.faces;
+                V = FV.vertices;
+            end
+
+            tri=triangulation(F,V); % Convert to triangulation object
+            stlwrite(tri,filename,"binary"); % Write using matlab default function
         end
 
         function F = getField(FV, voxelSize)
