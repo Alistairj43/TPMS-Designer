@@ -102,7 +102,43 @@ classdef v3Field
                     end
                     [F.property.solid, F.property.U] = voxelateLattice(Xt,Yt,Zt,[F.lower; F.upper],nodes,struts,rstrut,rnode);
                 case "TPMS"
-                    F.property.U = data(Xt,Yt,Zt);
+                    % Resample v1
+                    if size(data.v1,1)==1
+                        data.v1(2,:,:) = data.v1(1,:,:);
+                    end
+                    if size(data.v1,2)==1
+                        data.v1(:,2,:) = data.v1(:,1,:);
+                    end
+                    if size(data.v1,3)==1
+                        data.v1(:,:,2) = data.v1(:,:,1);
+                    end
+
+                    % Resample v2
+                    if size(data.v2,1)==1
+                        data.v2(2,:,:) = data.v2(1,:,:);
+                    end
+                    if size(data.v2,2)==1
+                        data.v2(:,2,:) = data.v2(:,1,:);
+                    end
+                    if size(data.v2,3)==1
+                        data.v2(:,:,2) = data.v2(:,:,1);
+                    end
+
+                    F.property.V1 = imresize3(data.v1,res);
+                    F.property.V2 = imresize3(data.v2,res);
+
+                    % Initialise the Field for the TPMS using equation u.
+                    switch data.type
+                        case "surface"
+                            F.property.U = (data.u(Xt,Yt,Zt)-F.property.V1+F.property.V2).*(data.u(Xt,Yt,Zt)+F.property.V1+F.property.V2);
+                        case "double"
+                            F.property.U = (data.u(Xt,Yt,Zt)+F.property.V1).*(data.u(Xt,Yt,Zt)+F.property.V2);
+                        case "single"
+                            F.property.U = data.u(Xt,Yt,Zt)+F.property.V1;
+                        otherwise
+                            F.property.U = data.u(Xt,Yt,Zt)+F.property.V1;
+                    end
+
                     F.property.solid = 1.0*(F.property.U<=0);
             end
         end

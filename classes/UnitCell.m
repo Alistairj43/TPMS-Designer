@@ -242,18 +242,19 @@ classdef UnitCell
                     UnitCell.u.rnode = UnitCell.v2;
                     UnitCell.F = v3Field('lattice',UnitCell.u,UnitCell.res,UnitCell.B,UnitCell.tform);
                 else
-                    % Initialise the Field for the TPMS using equation u.
-                    switch UnitCell.type
-                        case "surface"
-                            temp = @(x,y,z)(UnitCell.u(x,y,z)-UnitCell.v1+UnitCell.v2).*(UnitCell.u(x,y,z)+UnitCell.v1+UnitCell.v2);
-                        case "double"
-                            temp = @(x,y,z)(UnitCell.u(x,y,z)+UnitCell.v1).*(UnitCell.u(x,y,z)+UnitCell.v2);
-                        case "single"
-                            temp = @(x,y,z)UnitCell.u(x,y,z)+UnitCell.v1;
-                        otherwise
-                            temp = @(x,y,z)UnitCell.u(x,y,z)+UnitCell.v1;
-                    end
-                    UnitCell.F = v3Field("TPMS",temp,ceil(UnitCell.res),UnitCell.B,UnitCell.tform);  % Move to discretized space centred at origin
+
+%                     % Initialise the Field for the TPMS using equation u.
+%                     switch UnitCell.type
+%                         case "surface"
+%                             temp = @(x,y,z)(UnitCell.u(x,y,z)-UnitCell.v1+UnitCell.v2).*(UnitCell.u(x,y,z)+UnitCell.v1+UnitCell.v2);
+%                         case "double"
+%                             temp = @(x,y,z)(UnitCell.u(x,y,z)+UnitCell.v1).*(UnitCell.u(x,y,z)+UnitCell.v2);
+%                         case "single"
+%                             temp = @(x,y,z)UnitCell.u(x,y,z)+UnitCell.v1;
+%                         otherwise
+%                             temp = @(x,y,z)UnitCell.u(x,y,z)+UnitCell.v1;
+%                     end
+                    UnitCell.F = v3Field("TPMS",UnitCell,ceil(UnitCell.res),UnitCell.B,UnitCell.tform);  % Move to discretized space centred at origin
                 end
             end
 
