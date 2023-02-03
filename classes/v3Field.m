@@ -144,8 +144,14 @@ classdef v3Field
                         case "cylinder"
                             temp = (Xt/F.upper(1)).^2+(Yt/F.upper(2)).^2-1;
                             F.property.U = max(F.property.U,temp);
+                        case "FV"
+                            temp.faces = region.FV.faces;
+                            temp.vertices = 1+(1-1./res).*((region.FV.vertices-F.lower)./F.voxelSize);
+                            surface = 1.0*voxelateMesh(temp,[res(2),res(1),res(3)],'wrap',true);
+                            solid = imfill(1.0*surface);
+                            tempU = double(1.0.*(bwdist(solid)-bwdist(1.0-solid)));
+                            F.property.U = max(F.property.U,tempU);
                     end
-
 
                     F.property.solid = 1.0*(F.property.U<=0);
             end

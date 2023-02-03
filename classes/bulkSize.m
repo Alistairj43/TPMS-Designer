@@ -5,13 +5,17 @@ classdef bulkSize
         method
         bbox
         FV
-        F
     end
     
     methods
-        function obj = bulkSize(method,data)
+        function obj = bulkSize(method,data,voxelSize)
             %REGION Construct an instance of this class
             %   Detailed explanation goes here
+            arguments
+                method string = "box";
+                data = [];
+                voxelSize = 1.0;
+            end
             obj.method = method;
             
             switch method
