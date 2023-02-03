@@ -225,8 +225,8 @@ classdef UnitCell
             %       calcualted properties
             arguments
                 UnitCell;
-                computeCurvature = 'trimesh2';
-                computeMechanical = 1;
+                computeCurvature = 'none';
+                computeMechanical = 0;
                 computeMesh = 1;
             end
 

@@ -139,6 +139,14 @@ classdef v3Field
                             F.property.U = data.u(Xt,Yt,Zt)+F.property.V1;
                     end
 
+                    % Trim to non-cubic bounding box data
+                    switch region.method
+                        case "cylinder"
+                            temp = (Xt/F.upper(1)).^2+(Yt/F.upper(2)).^2-1;
+                            F.property.U = max(F.property.U,temp);
+                    end
+
+
                     F.property.solid = 1.0*(F.property.U<=0);
             end
         end

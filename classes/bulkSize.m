@@ -18,7 +18,11 @@ classdef bulkSize
                 case "box"
                     obj.bbox = [-data; data]./2;
                 case "cylinder"
-                    obj.bbox = [];
+                    obj.bbox = [-data(1) -data(2) -data(3)/2; data(1) data(2) data(3)/2];
+                case "sphere"
+                    obj.bbox = [-data -data -data; data data data];
+                case "ellipsoid"
+                    obj.bbox = [-data; data];
                 case "FV"
                     obj.FV.faces = data.faces;
                     obj.FV.vertices = data.vertices;
