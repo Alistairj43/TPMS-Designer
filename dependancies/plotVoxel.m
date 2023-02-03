@@ -29,6 +29,11 @@ cData = cData(1:(data.res(1)-1),1:(data.res(2)-1),1:(data.res(3)-1));
 
 %detect the external voxels and faces
 [FV, cData] = FindExternalVoxels(voxels,cData);
+
+if size(FV.vertices,1)~=size(cData,1)
+    FV.vertices = [0 0 0;FV.vertices];
+end
+
 %plot only external faces of external voxels
 if size(FV.vertices,1)==0
     h=[];
