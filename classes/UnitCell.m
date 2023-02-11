@@ -109,12 +109,16 @@ classdef UnitCell
                 case "BCCXYZ"
                     [UnitCell.u.nodes,UnitCell.u.struts] = readLattice('data/lattices/BCCXYZ.txt');
                 otherwise
-                    if endsWith(UnitCell.equation,'.txt')
-                        [nodes,struts] = readLattice(UnitCell.equation);
-                        UnitCell.u.nodes = nodes;
-                        UnitCell.u.struts = struts;
+                    if ischar(UnitCell.equation)
+                        if endsWith(UnitCell.equation,'.txt')
+                            [nodes,struts] = readLattice(UnitCell.equation);
+                            UnitCell.u.nodes = nodes;
+                            UnitCell.u.struts = struts;
+                        else
+                            UnitCell.u = str2func(UnitCell.equation);
+                        end
                     else
-                        UnitCell.u = str2func(UnitCell.equation);
+                        UnitCell.u = UnitCell.equation;
                     end
             end
 
