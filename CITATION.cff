@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this to aid in a publication, please use the following citation."
+authors:
+  - given-names: Alistair
+    family-names: Jones
+  - given-names: Martin
+    family-names: Leary
+  - given-names: Stuart
+    family-names: Bateman
+  - given-names: Mark
+    family-names: Easton
+title: "TPMS Designer"
+url: "https://github.com/Alistairj43/TPMS-Designer"
+preferred-citation: 
+  type: article
+  authors:
+    - given-names: Alistair
+      family-names: Jones
+    - given-names: Martin
+      family-names: Leary
+    - given-names: Stuart
+      family-names: Bateman
+    - given-names: Mark
+      family-names: Easton
+  title: "TPMS Designer: A tool for generating and analyzing triply periodic minimal surfaces"
+  doi: 10.1016/j.simpa.2021.100167
+  journal: "Software Impacts"
+  volume: 10
+  year: 2021
+  issn: "2665-9638"
