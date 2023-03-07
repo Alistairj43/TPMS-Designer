@@ -5,7 +5,7 @@ An open-source Matlab toolbox for generation, analysis and visualisation of TPMS
 If you use this to aid in a publication, please use the following citation:
 Alistair Jones, Martin Leary, Stuart Bateman, Mark Easton, TPMS Designer: A tool for generating and analyzing triply periodic minimal surfaces, Software Impacts, Volume 10, 2021, 100167, ISSN 2665-9638, https://doi.org/10.1016/j.simpa.2021.100167.
 
-**Install Instructions**
+## Install Instructions
 
 - To install the complete toolbox in Matlab, download 
 the latest release of TPMS Designer Release and include files in your path within matlab.
