@@ -105,9 +105,9 @@ classdef UnitCell
                     R = 1; r = 0.1;
                     UnitCell.u = @(x,y,z) (sqrt((x-pi).^2+(y-pi).^2)-R).^2+(z-pi).^2-r.^2;
                 case "BCC"
-                    [UnitCell.u.nodes,UnitCell.u.struts] = readLattice('data/lattices/BCC.txt');
+                    [UnitCell.u.nodes,UnitCell.u.struts] = readLattice(fullfile('data','lattices','BCC.txt'));
                 case "BCCXYZ"
-                    [UnitCell.u.nodes,UnitCell.u.struts] = readLattice('data/lattices/BCCXYZ.txt');
+                    [UnitCell.u.nodes,UnitCell.u.struts] = readLattice(fullfile('data','lattices','BCCXYZ.txt'));
                 otherwise
                     if ischar(UnitCell.equation)
                         if endsWith(UnitCell.equation,'.txt')
