@@ -24,7 +24,7 @@ e0=FV.vertices(FV.faces(:,3),:)-FV.vertices(FV.faces(:,2),:);
 e1=FV.vertices(FV.faces(:,1),:)-FV.vertices(FV.faces(:,3),:);
 e2=FV.vertices(FV.faces(:,2),:)-FV.vertices(FV.faces(:,1),:);
 % Normalize edge vectors
-e0_norm=normr(e0);
+e0_norm=normalize(e0,2,'norm');
 
 wfp=zeros(size(FV.faces,1),3);
 

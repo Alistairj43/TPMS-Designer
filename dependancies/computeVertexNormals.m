@@ -19,9 +19,9 @@ e0=FV.vertices(FV.faces(:,3),:)-FV.vertices(FV.faces(:,2),:);
 e1=FV.vertices(FV.faces(:,1),:)-FV.vertices(FV.faces(:,3),:);
 e2=FV.vertices(FV.faces(:,2),:)-FV.vertices(FV.faces(:,1),:);
 % Normalize edge vectors
-e0_norm=normr(e0);
-e1_norm=normr(e1);
-e2_norm=normr(e2);
+e0_norm=normalize(e0,2,'norm');
+e1_norm=normalize(e1,2,'norm');
+e2_norm=normalize(e2,2,'norm');
 
 %normalization procedure
 %calculate face Area
@@ -89,7 +89,7 @@ for i=1:size(FV.faces,1)
     up(FV.faces(i,2),:)=e0_norm(i,:);
     up(FV.faces(i,3),:)=e1_norm(i,:);
 end
-VertexNormals=normr(VertexNormals);
+VertexNormals=normalize(VertexNormals,2,'norm');
 
 %Calculate initial vertex coordinate system
 for i=1:size(FV.vertices,1)
