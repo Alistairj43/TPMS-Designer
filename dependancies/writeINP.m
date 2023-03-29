@@ -25,7 +25,9 @@ function writeINP(elementStruct,nodeStruct,filename)
 
 
 %Load from template INP file
-fid=fopen('data/inp/template.inp');
+[classPath, ~, ~] = fileparts(mfilename('fullpath')); % Path to current file
+dataPath = fullfile(classPath,'..','data'); % Path to data
+fid=fopen(fullfile(dataPath,'inp','template.inp'));
 T=textscan(fid,'%s','delimiter', '\n','Whitespace','');
 T=T{1,1};
 fclose(fid);
