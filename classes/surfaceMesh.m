@@ -147,13 +147,13 @@ classdef surfaceMesh
                     case {'meyer2003','Meyer2003'}
                         % Based on: "Discrete differential-geometry operators for triangulated 2-manifolds." 
                         % by Meyer, M., Desbrun, M., Schröder, P., & Barr, A. H. (2003).
-                        %[p.GC, p.MC, p.k1, p.k2]= curvatureMeyer2003(x,y,z,tri3d);
+                        [p.GC, p.MC, p.k1, p.k2]= curvatureMeyer2003(x,y,z,F);
                     case {'implicit','Implicit'}
                         % Implicit differentiation curvature method
                         % (accurate and fast when the equation is
                         % known/simple
                         [p.GC, p.MC, p.k1, p.k2] = curvatureImplicit(TPMS,FV.vertices);
-                    case {'kroon'}
+                    case {'kroon','patch','Kroon'}
                         % Use Kroon Method using 3rd order vertices
                         [p.GC, p.MC, p.k1, p.k2, ABS, RMS]=curvatureKroon(F,V,1);
                     otherwise
