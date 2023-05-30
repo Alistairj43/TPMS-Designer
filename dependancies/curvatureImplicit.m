@@ -13,12 +13,13 @@ function [GC, MC, k1, k2] = curvatureImplicit(TPMS,points)
 %   Credit: Alistair Jones, 30/09/2021, RMIT University
 %% Find Various Properties - gaussian curvature, mean curvature, k1, k2
 
-syms x0 y0 z0 x y z;
-assume(x0,'real'); assume(y0,'real'); assume(z0,'real');
+syms x y z;
+assume(x,'real'); assume(y,'real'); assume(z,'real');
 
 %Apply the scaling of the unit cell before differentiation
 A = TPMS.tform.A(1:3,1:3);
-xyz = [x y z]/A;
+
+xyz = inv(A)*([x y z]'-TPMS.tform.A(1:3,4));
 
 % Create implicit functions for MC and GC using differential geometry
 G = gradient(TPMS.u(xyz(1),xyz(2),xyz(3)),[x,y,z]);
