@@ -24,8 +24,9 @@ catch
     cData = data.property.solid;
 end
 
-voxels = data.property.solid(1:(data.res(1)-1),1:(data.res(2)-1),1:(data.res(3)-1));
-cData = cData(1:(data.res(1)-1),1:(data.res(2)-1),1:(data.res(3)-1));
+[sx, sy, sz] = size(data.property.solid);
+voxels = data.property.solid(1:(sx-1),1:(sy-1),1:(sz-1));
+cData = cData(1:(sx-1),1:(sy-1),1:(sz-1));
 
 %detect the external voxels and faces
 [FV, cData] = FindExternalVoxels(voxels,cData);
@@ -38,7 +39,7 @@ end
 if size(FV.vertices,1)==0
     h=[];
 else
-    FV.vertices = FV.vertices.*(data.upper-data.lower)./(data.res-1);
+    FV.vertices = FV.vertices.*data.voxelSize;
     h=patch(ax,'Faces',FV.faces,'Vertices',FV.vertices,'FaceVertexCData',cData,'FaceColor','flat');
     xlabel(ax,"X"); ylabel(ax,"Y"); zlabel(ax,"Z");
     c=colorbar(ax,'EastOutside'); c.Label.String = pName; colormap(ax,"jet");

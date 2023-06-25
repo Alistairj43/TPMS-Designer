@@ -14,7 +14,7 @@ classdef UnitCell
         u % Data/Equation describing features
         v1 % Geometry Parameter 1
         v2 % Geometry Parameter 2
-        res % Resolution (x,y,z)
+        voxelSize % voxelSize (x,y,z)
         tform % Transformal mapping
         FV % SurfaceMesh Object
         F % V3Field Object
@@ -23,7 +23,7 @@ classdef UnitCell
     end
     
     methods
-        function UnitCell = UnitCell(type,equation,v1,v2,res,tform,B)
+        function UnitCell = UnitCell(type,equation,v1,v2,voxelSize,tform,B)
             %Constructor for to initialising the UnitCell object 
             %   Inputs:
             %       type - (string) The type of unit cell (default = "network")
@@ -31,7 +31,7 @@ classdef UnitCell
             %           (default = "gyroid") 
             %       v1 - (double) First geometric parameter (defualt = 0.5) 
             %       v2 - (double) Second geometric parameter (defualt = 0.5) 
-            %       res - (1,3)(double) Resolution of cell in x,y,z (default = [30 30 30]) 
+            %       voxelSize - (1,1)(double) Size of a voxel in mm
             %       tform - (4,4)(double) Transform object
             %       B - Structure descirbing the bulk size of the
             %           object, includes a minimum and maxium bounding box coord and possibly other fields to describe the region)
@@ -42,7 +42,7 @@ classdef UnitCell
                 equation = "Gyroid";
                 v1 double = 0.5; % Geometry parameter 1
                 v2 double = 0; % Geometry parameter 2
-                res (1,3) double = [30 30 30];
+                voxelSize (1,1) double = [1.0];
                 tform = []; % see affinetform3d()
                 B = [];
             end
@@ -50,8 +50,7 @@ classdef UnitCell
             UnitCell.type = type;
             UnitCell.v1 = v1;
             UnitCell.v2 = v2;
-            UnitCell.res = res;
-            
+            UnitCell.voxelSize = voxelSize;
             UnitCell.M = metrics();
 
             if isempty(tform)
@@ -147,7 +146,7 @@ classdef UnitCell
             out.type = UnitCell.type;
             out.v1 = UnitCell.v1;
             out.v2 = UnitCell.v2;
-            out.res = UnitCell.res(1);
+            out.voxelSize = UnitCell.voxelSize;
             out.Lx = UnitCell.tform.A(1,1);
             out.Ly = UnitCell.tform.A(2,2);
             out.Lz = UnitCell.tform.A(3,3);
@@ -247,7 +246,7 @@ classdef UnitCell
                 if strcmp(UnitCell.type,'lattice') %Handle Lattices
                     UnitCell.u.rstrut = UnitCell.v1;
                     UnitCell.u.rnode = UnitCell.v2;
-                    UnitCell.F = v3Field('lattice',UnitCell.u,UnitCell.res,UnitCell.B,UnitCell.tform);
+                    UnitCell.F = v3Field('lattice',UnitCell.u,UnitCell.voxelSize,UnitCell.B,UnitCell.tform);
                 else
 
 %                     % Initialise the Field for the TPMS using equation u.
@@ -261,7 +260,7 @@ classdef UnitCell
 %                         otherwise
 %                             temp = @(x,y,z)UnitCell.u(x,y,z)+UnitCell.v1;
 %                     end
-                    UnitCell.F = v3Field("TPMS",UnitCell,ceil(UnitCell.res),UnitCell.B,UnitCell.tform);  % Move to discretized space centred at origin
+                    UnitCell.F = v3Field("TPMS",UnitCell,UnitCell.voxelSize,UnitCell.B,UnitCell.tform);  % Move to discretized space centred at origin
                 end
             end
 

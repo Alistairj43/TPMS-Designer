@@ -280,10 +280,8 @@ classdef surfaceMesh
                 FV;
                 voxelSize (1,1) double = 1.0;
             end
-            [lower, upper] = bounds(FV.vertices);
-            res = ceil((upper-lower)./voxelSize);
             region = bulkSize('FV',FV);
-            F = v3Field("FV",FV,res,region); %F = v3Field(method,data,res,region,tform)
+            F = v3Field("FV",FV,voxelSize,region); %F = v3Field(method,data,res,region,tform)
             F.name = FV.name;
         end
     end

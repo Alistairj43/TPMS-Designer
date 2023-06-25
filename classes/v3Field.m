@@ -16,7 +16,6 @@ classdef v3Field
         name
         lower
         upper
-        res
         voxelSize
         xq
         yq
@@ -27,7 +26,7 @@ classdef v3Field
     end
 
     methods
-        function F = v3Field(method,data,res,region,tform)
+        function F = v3Field(method,data,voxelSize,region,tform)
             %v3Field(method,data,res,region) construct an instance of this class
             %   optional inputs:
             %             method -> defines the method to be used = "flow"
@@ -40,26 +39,25 @@ classdef v3Field
             arguments
                 method string = "sample";
                 data = [];
-                res (1,3) double = [30 30 30];
+                voxelSize (1,1) double = [1.0];
                 region = [];
                 tform = [];
             end
 
             % Determine the bounds
             if isempty(region)
-                F.lower = [-0.5 -0.5 -0.5];
-                F.upper = [0.5 0.5 0.5];
+                F.lower = [-10 -10 -10];
+                F.upper = [10 10 10];
             else
                 F.lower = region.bbox(1,:);
                 F.upper = region.bbox(2,:);
             end
+            F.voxelSize = voxelSize;
 
             % Settup The Meshgrid
-            F.res = res;
-            F.voxelSize = (F.upper-F.lower)./res;
-            F.xq = linspace(F.lower(1),F.upper(1),res(1));
-            F.yq = linspace(F.lower(2),F.upper(2),res(2));
-            F.zq = linspace(F.lower(3),F.upper(3),res(3));
+            F.xq = F.lower(1):voxelSize:F.upper(1);
+            F.yq = F.lower(2):voxelSize:F.upper(2);%linspace(F.lower(2),F.upper(2),res(2));
+            F.zq = F.lower(3):voxelSize:F.upper(3);%linspace(F.lower(3),F.upper(3),res(3));
             [F.property.X,F.property.Y,F.property.Z] = meshgrid(F.xq,F.yq,F.zq);
             if ~isempty(tform)
                 [Xt, Yt, Zt] = transformPointsInverse(tform,F.property.X,F.property.Y,F.property.Z);
@@ -70,10 +68,11 @@ classdef v3Field
             switch method
                 case "FV"
                     temp.faces = data.faces;
-                    temp.vertices = 1+(1-1./res).*((data.vertices-F.lower)./F.voxelSize);
+                    res = round((F.upper-F.lower)/voxelSize);
+                    temp.vertices = 1+(1-1./res).*((data.vertices-F.lower)./voxelSize);
                     F.property.surface = 1.0*voxelateMesh(temp,[res(2),res(1),res(3)],'wrap',true);
                     F.property.solid = imfill(1.0*F.property.surface);
-                    F.property.U = double(1.0.*(bwdist(F.property.solid)-bwdist(1.0-F.property.solid)));
+                    F.property.U = voxelSize.*double(1.0.*(bwdist(F.property.solid)-bwdist(1.0-F.property.solid)));
                 case "data"
                     F.property.U = data;
                     F.property.solid = 1.0*(F.property.U<=0);
@@ -124,8 +123,10 @@ classdef v3Field
                         data.v2(:,:,2) = data.v2(:,:,1);
                     end
 
-                    F.property.V1 = imresize3(data.v1,res);
-                    F.property.V2 = imresize3(data.v2,res);
+
+                    F.property.V1 = voxelResize(data.v1,size(Xt));
+                    F.property.V2 = voxelResize(data.v2,size(Xt));
+
 
                     % Initialise the Field for the TPMS using equation u.
                     switch data.type
@@ -146,6 +147,7 @@ classdef v3Field
                             F.property.U = max(F.property.U,temp);
                         case "FV"
                             temp.faces = region.FV.faces;
+                            res = (F.upper-F.lower)/voxelSize;
                             temp.vertices = 1+(1-1./res).*((region.FV.vertices-F.lower)./F.voxelSize);
                             surface = 1.0*voxelateMesh(temp,[res(2),res(1),res(3)],'wrap',true);
                             solid = imfill(1.0*surface);
@@ -186,25 +188,27 @@ classdef v3Field
 
 
             % Manufacturability using elipsoidal weighting filter -> 1 = perfect, 0 = empty space
-            n = 9; nq = linspace(-1,1,n); [q1, q2, q3] = ndgrid(nq,nq,nq);
-            c = 2.5; c1 = 0; c2 = 0.5;
-            H = 1/(c^3*(2*pi)^(3/2)).*exp(-(q1.^2+q2.^2+q3.^2)/(2*c^2)); % Make weightings with gaussian distribution
-            H(:,:,ceil((n/2)+1):n) = c1.*H(:,:,ceil((n/2)+1):n); % Set top half equal to 0.1
-            H(:,:,ceil((n/2))) = c2.*H(:,:,ceil((n/2))); % Set current plane properties
+            n = floor(4/F.voxelSize)*2+1; nq = linspace(-1,1,n); [q1, q2, q3] = ndgrid(nq,nq,nq);
+            c = 10; % Scaling function for shape of heat input
+            H = (c/sqrt(2*pi).*exp(-(q1.^2/2)-(q2.^2/2)))+q3;
+            H(:,:,ceil(n./2)) = 0.2.*H(:,:,ceil(n./2)); % Set current plane properties
+            H(:,:,(ceil(n./2)+1):n) = zeros(n,n,floor(n./2)); % Ignore the top half of the volume
+            H = H./sum(H,'all'); % Normalise distribution to account for variation in voxelsize
 
             temp = zeros(size(F.property.solid,1)+2*n,size(F.property.solid,2)+2*n,size(F.property.solid,3)+n); % "Air" Padding
             temp(:,:,1:n) = ones(size(F.property.solid,1)+2*n,size(F.property.solid,2)+2*n,n); % "Build Platten" Padding Below
             temp(n+1:n+size(F.property.solid,1),n+1:n+size(F.property.solid,2),n+1:n+size(F.property.solid,3)) = F.property.solid; % Placing the Part
             temp = min(1,imfilter(temp,H)); % Apply convolutional filter
+            
             p.V3buildRisk = F.property.solid-temp(n+1:n+size(F.property.solid,1),n+1:n+size(F.property.solid,2),n+1:n+size(F.property.solid,3)).*F.property.solid;
             p.V3buildRisk(F.property.solid==0) = nan;
             F.property = p;
 
             for i = 1:size(F.property.solid,3)
                 % Pad to account for periodic boundary conditions
-                temp = padarray(F.property.solid,[1 1],0);
-                XY.maxthickness(i) = max(bwdist(~temp),[],'all').*mean((F.upper-F.lower)./F.res);
-                XY.area(i) = sum(F.property.solid(:,:,i),'all')./(F.res(1)*F.res(2));
+                %temp = padarray(F.property.solid,[1 1],0);
+                XY.maxthickness(i) = max(F.property.U,[],'all')*F.voxelSize;
+                XY.area(i) = sum(F.property.solid(:,:,i),'all')*F.voxelSize^2;
             end
             F.zSlices = XY;
         end
@@ -226,7 +230,7 @@ classdef v3Field
             mu2 = E2/(2+2*v2);
             try
                 F.CH = computeStiffness(F.upper(1),F.upper(2),F.upper(3),lambda1,mu1,lambda2,mu2,...
-                    F.property.solid(1:(F.res(1)-1),1:(F.res(2)-1),1:(F.res(3)-1)),method);
+                    F.property.solid,method);
             catch % If homogenisation fails return NaN
                 F.CH = NaN(6,6);
             end
@@ -276,7 +280,7 @@ classdef v3Field
                 colormap(ax,"jet"); view(ax,2);
             elseif strcmp(zslice,'orthoslice')
                 cData(isnan(cData))=-1;
-                h = orthosliceViewer(cData,'Parent',ax.Parent,'Colormap',[0 0 0; flipud(jet)]);
+                h = orthosliceViewer(flip(permute(cData,[3,1,2]),1),'Parent',ax.Parent,'Colormap',[0 0 0; flipud(jet)]);
             else
                 h = plotVoxel(F,pName,opt,ax);
             end
@@ -285,7 +289,8 @@ classdef v3Field
 
         function exportINP(F,filename)
             % Prepare voxel data for writing to INP file
-            im = F.property.solid(1:(F.res(1)-1),1:(F.res(2)-1),1:(F.res(3)-1));
+            res = size(F.property.solid);
+            im = F.property.solid(1:(res-1),1:(res-1),1:(res-1));
             [rows, cols, sli]  = size(im);
             ele_ind_vector = find(im == 1);
             num_ele = size(ele_ind_vector, 1);

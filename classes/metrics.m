@@ -100,11 +100,11 @@ classdef metrics
             M.thicknessAM = mean(F.zSlices.maxthickness);
 
             %Calculate pore diameter (Pad to account for periodicity)
-            tempArray = bwdist(padarray(padarray(F.property.solid,ceil(F.res),'circular','both'),[1 1 1],1,'both')); 
+            tempArray = bwdist(padarray(padarray(F.property.solid,size(F.property.solid,1),'circular','both'),[1 1 1],1,'both')); 
             M.poreDiameter = 2*F.voxelSize(1)*max(tempArray,[],'all');
 
             %Calculate approximate wall thickness
-            tempArray = bwdist(padarray(padarray(~F.property.solid,ceil(F.res),'circular','both'),[1 1 1],1,'both')); 
+            tempArray = bwdist(padarray(padarray(~F.property.solid,size(F.property.solid,1),'circular','both'),[1 1 1],1,'both')); 
             M.thickness = 2*F.voxelSize(1)*max(tempArray,[],'all');
 
             %Calculate mechanical metrics if the stiffness tensor is full rank
