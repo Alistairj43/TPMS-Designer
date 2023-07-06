@@ -1,8 +1,9 @@
-function [GC, MC, k1, k2] = curvatureImplicit(TPMS,points)
+function [GC, MC, k1, k2] = curvatureImplicit(equation,points,tform)
 %IMPLICTCURVATURE Calcualtes curvature based on the implicit TPMS functions
 % Inputs:
-%   TPMS - the TPMS implicit to be analysed
+%   equation - the function implicit f(x,y,z) to be analysed
 %   points - the list of points (verticies or face centroids) to evalue curvature at 
+%   tform - the affine 3D transform to scale/rotate/skew the object
 % Outputs:
 %   GC - gaussian curvature (from determinant of the shape matrix)
 %   MC - mean curvature (from divergance of unit normal)
@@ -17,12 +18,12 @@ syms x y z;
 assume(x,'real'); assume(y,'real'); assume(z,'real');
 
 %Apply the scaling of the unit cell before differentiation
-A = TPMS.tform.A(1:3,1:3);
+A = tform.A(1:3,1:3);
 
-xyz = inv(A)*([x y z]'-TPMS.tform.A(1:3,4));
+xyz = A\([x y z]'-tform.A(1:3,4));
 
 % Create implicit functions for MC and GC using differential geometry
-G = gradient(TPMS.u(xyz(1),xyz(2),xyz(3)),[x,y,z]);
+G = gradient(equation(xyz(1),xyz(2),xyz(3)),[x,y,z]);
 G2 = [gradient(G(1),[x y z]) gradient(G(2),[x y z]) gradient(G(3),[x y z])];
 K = det([G2' G; G' 0]);
 H = -1/2*divergence(G/norm(G));

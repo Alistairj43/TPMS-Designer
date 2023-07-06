@@ -152,10 +152,10 @@ classdef surfaceMesh
                         % Implicit differentiation curvature method
                         % (accurate and fast when the equation is
                         % known/simple
-                        [p.GC, p.MC, p.k1, p.k2] = curvatureImplicit(TPMS,FV.vertices);
+                        [p.GC, p.MC, p.k1, p.k2] = curvatureImplicit(TPMS.u,FV.vertices,TPMS.tform);
                     case {'kroon','patch','Kroon'}
                         % Use Kroon Method using 3rd order vertices
-                        [p.GC, p.MC, p.k1, p.k2, ABS, RMS]=curvatureKroon(F,V,1);
+                        [p.GC, p.MC, p.k1, p.k2, ~, ~]=curvatureKroon(F,V,1);
                     otherwise
                         p.k1 = zeros(size(FV.vertices,1),1);
                         p.k2 = p.k1;

@@ -179,7 +179,7 @@ classdef v3Field
                 p.V3inclination = 90+elevation;
                 [l, w, h] = size(F.property.X);
                 points = [reshape(F.property.X,[l*w*h,1,1]) reshape(F.property.Y,[l*w*h,1,1]) reshape(F.property.Z,[l*w*h,1,1])];
-                [GC, MC, k1, k2] = curvatureImplicit(TPMS,points);
+                [GC, MC, k1, k2] = curvatureImplicit(TPMS.u,points,TPMS.tform);
                 p.V3k1 = reshape(max(min(k1,10),-10),[l,w,h]);
                 p.V3k2 = reshape(max(min(k2,10),-10),[l,w,h]);
                 p.V3GC = reshape(max(min(GC,10),-10),[l,w,h]);
