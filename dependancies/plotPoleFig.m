@@ -26,6 +26,10 @@ end
 if isempty(FV.faces)
     h = [];
 else
+    if ~isa(FV,'surfaceMesh') % Convert to surfaceMesh object if nessecary
+        FV = surfaceMesh('FV',FV);
+        FV = FV.calculateProperties();
+    end
     N = [FV.Fproperty.Nx FV.Fproperty.Ny FV.Fproperty.Nz];
     Aw = FV.Fproperty.Farea;
 
@@ -34,12 +38,10 @@ else
     ids = dsearchn(FV.vertices,N); %Find which node of the icosphere is closest to the unit normal vector
     Cs = length(FV.vertices)*accumarray(ids,Aw,[length(FV.vertices) 1],@sum,0)/totalA+0.001; %Complete cumulative sum normalise by area of sphere and surface
 
-    %surf(ax,Fc(:,1),Fc(:,2),Fc(:,3),Cs,'FaceColor','interp','EdgeColor','none')
     h = patch(ax,'Faces',FV.faces,'Vertices',FV.vertices,'CData',Cs,'FaceColor','interp','EdgeColor','none');
     axis(ax,'equal','vis3d'); view(ax,3);
 
     c=colorbar(ax); c.Label.String = 'Relative Intensity'; colormap(ax,"jet");
-    %caxis(ax,prctile(Cs,[0.2 99.8]));
     axis(ax,'manual','vis3d','equal','tight');
     xlabel(ax,"X"); ylabel(ax,"Y"); zlabel(ax,"Z");
     ax.XTick = []; ax.YTick = []; ax.ZTick = [];
