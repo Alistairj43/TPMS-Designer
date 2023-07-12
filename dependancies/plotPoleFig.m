@@ -32,7 +32,7 @@ else
     totalA = sum(Aw,'all','omitnan'); %Total per face weighting
     [FV] = icosphere(n); %Generate an icosphere with n subdivisions
     ids = dsearchn(FV.vertices,N); %Find which node of the icosphere is closest to the unit normal vector
-    Cs = 4*pi*length(FV.vertices)*accumarray(ids,Aw,[length(FV.vertices) 1],@sum,0)/totalA+0.001; %Complete cumulative sum normalise by area of sphere and surface
+    Cs = length(FV.vertices)*accumarray(ids,Aw,[length(FV.vertices) 1],@sum,0)/totalA+0.001; %Complete cumulative sum normalise by area of sphere and surface
 
     %surf(ax,Fc(:,1),Fc(:,2),Fc(:,3),Cs,'FaceColor','interp','EdgeColor','none')
     h = patch(ax,'Faces',FV.faces,'Vertices',FV.vertices,'CData',Cs,'FaceColor','interp','EdgeColor','none');
