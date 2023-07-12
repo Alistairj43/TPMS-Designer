@@ -7,7 +7,7 @@ classdef metrics
     %   M = metrics(); - create and returns an empty metrics object 'M'
     %
     %   M = fvMetrics(FV); - calculate and updates metrics based on the
-    %         properties of a surfaceMesh FV
+    %         properties of a SurfMesh FV
     %
     %   M = mechanicalMetrics(F);  - calcualte the mechanical metrics
     %           from a the solid-field object
@@ -71,7 +71,7 @@ classdef metrics
         end
         
         function M = fvMetrics(M,FV)
-            % Function to calculate metrics based on properties of a surfaceMesh.
+            % Function to calculate metrics based on properties of a SurfMesh.
             M.surfaceArea = FV.totalArea;
             M.meshVolume = FV.totalVolume;
             M.Nfaces = size(FV.faces,1);

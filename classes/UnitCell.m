@@ -16,7 +16,7 @@ classdef UnitCell
         v2 % Geometry Parameter 2
         voxelSize % voxelSize (x,y,z)
         tform % Transformal mapping
-        FV % SurfaceMesh Object
+        FV % SurfMesh Object
         F % V3Field Object
         M % Metrics Object
         B % Object describing the bulk object
@@ -157,14 +157,14 @@ classdef UnitCell
             % Inputs:
             %   Unit Cell - (UnitCell) Self-referenced object 
             %   plottype - (String) The type of plot Valid inputs include
-            %       'SurfaceMesh' (defualt), 'voxel',
+            %       'SurfMesh' (defualt), 'voxel',
             %       'orthoslice', 'slice', 'histogram', 'histogram2',
             %       'polemap', 'tensor', 'lattice'
             %   property1 - (String) Name of the primary property being
             %       visualised. Defaults to 'inclination'
             %   property2 - (String) Name of the secondary property being
             %       visualised. Defaults to 'azimuth'. This is other used
-            %       for vectormapping on a SurfaceMesh and histogram2 plots
+            %       for vectormapping on a SurfMesh and histogram2 plots
             %   opts - Options, additional parameter based on plot type
             %       opts.fancy (boolean): use fancy graphics styling (default=1), 
             %       opts.caps (int): 0=dont plot, 1=plot without color, 2=plot with color  
@@ -176,7 +176,7 @@ classdef UnitCell
             %   h - Handle to the created graphical object
             arguments
                 UnitCell;
-                plottype string = "SurfaceMesh";
+                plottype string = "SurfMesh";
                 property1 string = "inclination";
                 property2 string = "azimuth";
                 opts = [];
@@ -223,7 +223,7 @@ classdef UnitCell
             %   Unit Cell - (UnitCell) Self-referenced object
             %   computeCurvature - (String) The method for curvature
             %       including 'trimesh2', 'meyer2003', 'implicit', 'none'
-            %       see SurfaceMesh.calculateProperties() for more info.
+            %       see SurfMesh.calculateProperties() for more info.
             %   computeMechanical - (logical) (default = 1) 
             %   computeMesh - (logical) (default = 1)
             % Outputs:
@@ -267,9 +267,9 @@ classdef UnitCell
             % Calculate derived properties
             UnitCell.F = UnitCell.F.calculateProperties(computeCurvature,UnitCell);
 
-            % Generate the SurfaceMesh
+            % Generate the SurfMesh
             if computeMesh&&isempty(UnitCell.FV) 
-                UnitCell.FV = surfaceMesh('TPMS',UnitCell);
+                UnitCell.FV = SurfMesh('TPMS',UnitCell);
                 UnitCell.FV = UnitCell.FV.calculateProperties(computeCurvature,UnitCell);
                 UnitCell.M = UnitCell.M.fvMetrics(UnitCell.FV);                
                 temp = diag(UnitCell.tform.A)';

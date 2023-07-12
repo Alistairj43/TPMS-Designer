@@ -1,7 +1,7 @@
 function h =plotVoxel(data,pName,opt,ax)
 %% Function plots a voxelated patch, coloured by "property"
 % Inputs:   ax              - Handle to axis to plot on
-%           data            - surfaceMesh object containing FV data
+%           data            - SurfMesh object containing FV data
 %           property        - string, the name of the property to be plotted
 % Outputs:  h               - handle to the created patch graphical object
 %

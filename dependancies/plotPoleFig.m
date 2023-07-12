@@ -26,8 +26,8 @@ end
 if isempty(FV.faces)
     h = [];
 else
-    if ~isa(FV,'surfaceMesh') % Convert to surfaceMesh object if nessecary
-        FV = surfaceMesh('FV',FV);
+    if ~isa(FV,'SurfMesh') % Convert to SurfMesh object if nessecary
+        FV = SurfMesh('FV',FV);
         FV = FV.calculateProperties();
     end
     N = [FV.Fproperty.Nx FV.Fproperty.Ny FV.Fproperty.Nz];

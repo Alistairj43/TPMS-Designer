@@ -46,7 +46,7 @@ try
             x_in = reshape(x_in,[l*w*h,1,1]); % Flatten
             a_in = ones(size(x_in));
         end
-    elseif isa(data,'surfaceMesh')
+    elseif isa(data,'SurfMesh')
         if isfield(data.Fproperty,pID)
             % Face property
             x_in = data.Fproperty.(pID);

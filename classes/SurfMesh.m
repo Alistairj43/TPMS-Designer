@@ -1,10 +1,10 @@
-classdef surfaceMesh
-    %SurfaceMesh is a class to work with triangulation mesh objects
+classdef SurfMesh
+    %SurfMesh is a class to work with triangulation mesh objects
     %   designed to work within the TPMS Designer toolbox trimeshes may be 
     %   initialised from an implicit/field or an stl file 
     %   methods have been added for calculating properties and visualising
     %
-    % TPMS Design Package - surfaceMesh class
+    % TPMS Design Package - SurfMesh class
     % Created by Alistair Jones, RMIT University 2022.
     
     properties
@@ -22,17 +22,17 @@ classdef surfaceMesh
     end
     
     methods
-        function FV = surfaceMesh(varargin)
-            % SurfaceMesh Construct an instance of this class
-            %   Creates a surfaceMesh object, and allows various
+        function FV = SurfMesh(varargin)
+            % SurfMesh Construct an instance of this class
+            %   Creates a SurfMesh object, and allows various
             %   callbacks to convert and calculate properties.
             % Inputs: varargin
-            %   FV = surfaceMesh() Creates an empty array
-            %   FV = surfaceMesh('stl','path/object.stl',..) imports .stl from path 
-            %   FV = surfaceMesh('fv',FV) directly specify FV structure with matching
-            %   FV = surfaceMesh('TPMS',UnitCell) for use with a TPMS
-            %   FV = surfaceMesh(...,0) calculate first derivative properties
-            %   FV = surfaceMesh(...,1) calculatre all properties (default)
+            %   FV = SurfMesh() Creates an empty array
+            %   FV = SurfMesh('stl','path/object.stl',..) imports .stl from path 
+            %   FV = SurfMesh('fv',FV) directly specify FV structure with matching
+            %   FV = SurfMesh('TPMS',UnitCell) for use with a TPMS
+            %   FV = SurfMesh(...,0) calculate first derivative properties
+            %   FV = SurfMesh(...,1) calculatre all properties (default)
             if nargin == 0
                 return
             end
@@ -42,7 +42,7 @@ classdef surfaceMesh
             if contains(varargin{1},'fv','IgnoreCase',true)
                 % Construct from existing FV structure
                 fields = fieldnames(varargin{2});
-                isfield(fields,properties(surfaceMesh));
+                isfield(fields,properties(SurfMesh));
                 for i = 1:length(fields)
                     FV.(fields{i})= varargin{2}.(fields{i});
                 end
@@ -90,13 +90,13 @@ classdef surfaceMesh
             %   Inlcuding curvatures, surface normals and derived
             %   proeprties
             % Inputs:
-            %   FV - SurfaceMesh object
+            %   FV - SurfMesh object
             %   curvatureMethod - (string) Describing method that should 
             %       be used to calculate curvature (default = 'trimesh2')
             %   TPMS - UnitCell object used for implicit differentiation
             %       (only for TPMS-type structures)
             % Outputs:
-            %   FV - SurfaceMesh object with additional properties
+            %   FV - SurfMesh object with additional properties
             
             F = FV.faces;
             V = FV.vertices;
@@ -191,7 +191,7 @@ classdef surfaceMesh
             % Function to plot a coloured mesh onto axis 'ax'
             %Defaults
             arguments
-                FV surfaceMesh;
+                FV SurfMesh;
                 pName string = [];
                 p2Name string = [];
                 caps double = 0.6;
@@ -249,7 +249,7 @@ classdef surfaceMesh
         function exportSTL(FV,filename)
             % Funtion to convert an FV structure to a Field
             % inputs:
-            %   FV - surfaceMesh object
+            %   FV - SurfMesh object
             %   filename - path/name to save file as
             % outputs: none
             arguments
@@ -275,7 +275,7 @@ classdef surfaceMesh
             % inputs:
             %   voxelSize - desired size of each voxel. default 1.0mm
             % outputs:
-            %   F - v3Field object based on the distance-field of the surfaceMesh object
+            %   F - v3Field object based on the distance-field of the SurfMesh object
             arguments
                 FV;
                 voxelSize (1,1) double = 1.0;
