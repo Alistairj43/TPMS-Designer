@@ -29,7 +29,7 @@ classdef v3Field
         function F = v3Field(method,data,voxelSize,region,tform)
             %v3Field(method,data,res,region) construct an instance of this class
             %   optional inputs:
-            %             method -> defines the method to be used = "flow"
+            %             method -> defines the method to be used
             %             data -> the data to generate the v3field
             %             res (3,1) double = [30; 30; 30];
             %             region - bulkSize object describing the design
@@ -100,6 +100,13 @@ classdef v3Field
                         rstrut = 0.1;
                     end
                     [F.property.solid, F.property.U] = voxelateLattice(Xt,Yt,Zt,[F.lower; F.upper],nodes,struts,rstrut,rnode);
+                case "imagestack"
+                    % Select a folder to import a stack of images from
+                    if isstring(data)
+                        F.property.U = readImageStack(data,Xt,Yt,Zt);
+                    else
+                    end
+
                 case "TPMS"
                     % Resample v1
                     if size(data.v1,1)==1
