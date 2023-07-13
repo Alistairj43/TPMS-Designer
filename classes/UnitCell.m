@@ -96,6 +96,9 @@ classdef UnitCell
                     UnitCell.u = @(x,y,z) 4*cos(2*pi*x).*cos(2*pi*y).*cos(2*pi*z)-(cos(2*x).*cos(2*y)...
                         +cos(2*y).*cos(2*z)+cos(2*z).*cos(2*x));
                     A = 40.82;
+                case "Lidinoid"
+                    UnitCell.u = @(x,y,z) 0.5*(sin(4*pi*x).*cos(2*pi*y).*sin(2*pi*z)+sin(4*pi*y).*cos(2*pi*z).*sin(2*pi*x)...
+                        +sin(4*pi*z).*cos(2*pi*x).*sin(2*pi*y)-cos(4*pi*x).*cos(4*pi*y)-cos(4*pi*y).*cos(4*pi*z)-cos(4*pi*z).*cos(4*pi*x))+0.15;
                 case "Sinusoidal"
                     UnitCell.u = @(x,y,z) sin(2*pi*x)+...
                         sin(2*pi*y)-(z-pi);
