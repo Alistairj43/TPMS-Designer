@@ -8,13 +8,12 @@ classdef bulkSize
     end
     
     methods
-        function obj = bulkSize(method,data,voxelSize)
+        function obj = bulkSize(method,data)
             %REGION Construct an instance of this class
             %   Detailed explanation goes here
             arguments
                 method string = "box";
                 data = [];
-                voxelSize = 1.0;
             end
             obj.method = method;
             
@@ -22,7 +21,7 @@ classdef bulkSize
                 case "box"
                     obj.bbox = [-data; data]./2;
                 case "cylinder"
-                    obj.bbox = [-data(1) -data(2) -data(3)/2; data(1) data(2) data(3)/2];
+                    obj.bbox = [-data; data]./2;
                 case "sphere"
                     obj.bbox = [-data -data -data; data data data];
                 case "ellipsoid"
