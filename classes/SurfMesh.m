@@ -18,7 +18,6 @@ classdef SurfMesh
         Vproperty % Vertex property
         Fproperty % Face Property
         Qproperty % Vector Properties
-
     end
     
     methods
@@ -55,26 +54,14 @@ classdef SurfMesh
                 TR = stlread(string(varargin(2)));
                 FV.faces = TR.ConnectivityList;
                 FV.vertices = TR.Points;
-                FV.name = string(varargin(2));                
+                FV.name = string(varargin(2)); 
             elseif contains(varargin{1},'TPMS','IgnoreCase',true)
                 [f, v] = isosurface(varargin{2}.F.property.X,varargin{2}.F.property.Y,varargin{2}.F.property.Z,varargin{2}.F.property.U,0);
                 [FV.faces,FV.vertices]=cleanMesh(f, v);
-
-
-                switch varargin{2}.B.method
-%                     case 'FV' % This case is in development - requiring mesh boolean tools
-%                         [fc, vc] = isocaps(varargin{2}.F.property.X,varargin{2}.F.property.Y,varargin{2}.F.property.Z,varargin{2}.F.property.U,0,'below');
-%                         fc = fliplr(fc); % Fix normals to point outwards
-%                         [FV.faces,FV.vertices]=mergeMesh({f fc},{v vc});
-%                         f = varargin{2}.B.FV.faces;
-%                         v = varargin{2}.B.FV.vertices;
-%                         [FV.vertices,FV.faces]=surfboolean(FV.vertices,FV.faces,'and',v,f); 
-                    otherwise % General Case
-                        [fc, vc] = isocaps(varargin{2}.F.property.X,varargin{2}.F.property.Y,varargin{2}.F.property.Z,-varargin{2}.F.property.U,0,'above');
-                        if ~isempty(fc)
-                            fc = fliplr(fc); % Fix normals to point outwards
-                            [FV.facesc, FV.verticesc] = cleanMesh(fc, vc);
-                        end
+                [fc, vc] = isocaps(varargin{2}.F.property.X,varargin{2}.F.property.Y,varargin{2}.F.property.Z,-varargin{2}.F.property.U,0,'above');
+                if ~isempty(fc)
+                    fc = fliplr(fc); % Fix normals to point outwards
+                    [FV.facesc, FV.verticesc] = cleanMesh(fc, vc);
                 end
             end
         end
@@ -227,7 +214,6 @@ classdef SurfMesh
                 lighting(ax,'flat');
                 ax.BoxStyle = 'full';
                 axis(ax,'manual','vis3d','equal','tight');
-                rotate3d(ax,'on');
 
                 %Add function to plot vectors kDir1, kDir2, VertexNormals, FaceNormals%
                 pID2 = convertStringsToChars(extractBefore(p2Name+" ", " "));
