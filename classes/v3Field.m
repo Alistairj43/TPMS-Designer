@@ -150,11 +150,11 @@ classdef v3Field
                     % Trim to non-cubic bounding box data
                     switch region.method
                         case "cylinder"
-                            temp = (Xt/F.upper(1)).^2+(Yt/F.upper(2)).^2-1;
+                            temp = (F.property.X/F.upper(1)).^2+(F.property.Y/F.upper(2)).^2-1;
                             F.property.U = max(F.property.U,temp);
                         case "FV"
                             temp.faces = region.FV.faces;
-                            res = (F.upper-F.lower)/voxelSize;
+                            res = 1+(F.upper-F.lower)/voxelSize;
                             temp.vertices = 1+(1-1./res).*((region.FV.vertices-F.lower)./F.voxelSize);
                             surface = 1.0*voxelateMesh(temp,[res(2),res(1),res(3)],'wrap',true);
                             solid = imfill(1.0*surface);
@@ -211,10 +211,13 @@ classdef v3Field
             p.V3buildRisk(F.property.solid==0) = nan;
             F.property = p;
 
-            for i = 1:size(F.property.solid,3)
+            [nx, ny, nz] = size(F.property.solid);
+            for i = 1:nz
                 % Pad to account for periodic boundary conditions
-                %temp = padarray(F.property.solid,[1 1],0);
-                XY.maxthickness(i) = max(F.property.U,[],'all')*F.voxelSize;
+                temp = padarray(F.property.solid(:,:,i),[nx ny],'circular','both');
+                temp = bwdist(1-temp);
+                temp = temp(nx+1:(2*nx),ny+1:(2*ny));
+                XY.maxthickness(i) = max(temp,[],'all')*F.voxelSize;
                 XY.area(i) = sum(F.property.solid(:,:,i),'all')*F.voxelSize^2;
             end
             F.zSlices = XY;
