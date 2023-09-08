@@ -150,9 +150,15 @@ classdef UnitCell
             out.v1 = UnitCell.v1;
             out.v2 = UnitCell.v2;
             out.voxelSize = UnitCell.voxelSize;
-            out.Lx = UnitCell.tform.A(1,1);
-            out.Ly = UnitCell.tform.A(2,2);
-            out.Lz = UnitCell.tform.A(3,3);
+            if verLessThan('matlab', '9.13') % Compatability
+                out.Lx = UnitCell.tform.T(1,1);
+                out.Ly = UnitCell.tform.T(1,2);
+                out.Lz = UnitCell.tform.T(1,3);
+            else
+                out.Lx = UnitCell.tform.A(1,1);
+                out.Ly = UnitCell.tform.A(2,2);
+                out.Lz = UnitCell.tform.A(3,3);
+            end
         end
         
         function h = plot(UnitCell,plottype,property1,property2,opts,ax)
