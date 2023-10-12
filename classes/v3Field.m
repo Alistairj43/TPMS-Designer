@@ -99,7 +99,9 @@ classdef v3Field
                     else
                         rstrut = 0.1;
                     end
-                    [F.property.solid, F.property.U] = voxelateLattice(Xt,Yt,Zt,[F.lower; F.upper],nodes,struts,rstrut,rnode);
+
+                    sz = diag(tform.A)';
+                    [F.property.solid, F.property.U] = voxelateLattice(F.property.X,F.property.Y,F.property.Z,sz(1:3),nodes,struts,rstrut,rnode);
                 case "imagestack"
                     % Select a folder to import a stack of images from
                     if isstring(data)
