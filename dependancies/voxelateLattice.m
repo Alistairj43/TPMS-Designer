@@ -1,16 +1,17 @@
-function [solid,U] = voxelateLattice(X,Y,Z,bounds,nodes,struts,rstrut,rnode)
+function [solid,U] = voxelateLattice(X,Y,Z,cellsize,nodes,struts,rstrut,rnode)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % n is the number of voxel along each axis
 % address is the file location of wireframe
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 solid = zeros(size(X));      % initial grid with zeros
 U = ones(size(X))*10000;
+rstrut = rstrut./cellsize(1);
+rnode = rnode./cellsize(1);
 
 %% Get the voxel close the the strut witnin a certain distance
-nodes = nodes.*(bounds(2,:)-bounds(1,:))+bounds(1,:);
 for i = 1:numel(X)          % for each voxel, deside if it is active
     % for each strut, get the distance to the voxel
-    center = [X(i) Y(i) Z(i)];        % voxel center position
+    center = [X(i) Y(i) Z(i)]./cellsize-floor([X(i) Y(i) Z(i)]./cellsize); % voxel center position
     for j = 1:length(struts)
         start_n = nodes(struts(j,1),:);  % start node coordinate
         end_n = nodes(struts(j,2),:);    % end node coordinate
