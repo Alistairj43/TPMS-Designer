@@ -113,13 +113,27 @@ classdef UnitCell
                     [UnitCell.u.nodes,UnitCell.u.struts] = readLattice(fullfile(dataPath,'lattices','BCC.txt'));
                 case "BCCXYZ"
                     [UnitCell.u.nodes,UnitCell.u.struts] = readLattice(fullfile(dataPath,'lattices','BCCXYZ.txt'));
+                case "Cubic"
+                    [UnitCell.u.nodes,UnitCell.u.struts] = readLattice(fullfile(dataPath,'lattices','Cubic.txt'));
+                case "FCCXYZ"
+                    [UnitCell.u.nodes,UnitCell.u.struts] = readLattice(fullfile(dataPath,'lattices','FCCXYZ.txt'));
+                case "Octet"
+                    [UnitCell.u.nodes,UnitCell.u.struts] = readLattice(fullfile(dataPath,'lattices','Octet.txt'));
+                case "OctetXYZ"
+                    [UnitCell.u.nodes,UnitCell.u.struts] = readLattice(fullfile(dataPath,'lattices','OctetXYZ.txt'));
+                case "tesseract"
+                    [UnitCell.u.nodes,UnitCell.u.struts] = readLattice(fullfile(dataPath,'lattices','tesseract.txt'));
+                case "vintiles"
+                    [UnitCell.u.nodes,UnitCell.u.struts] = readLattice(fullfile(dataPath,'lattices','vintiles.txt'));
+                case "x_cross_grid"
+                    [UnitCell.u.nodes,UnitCell.u.struts] = readLattice(fullfile(dataPath,'lattices','x_cross_grid.txt'));
                 otherwise
                     if ischar(UnitCell.equation)
-                        if endsWith(UnitCell.equation,'.txt')
+                        if endsWith(UnitCell.equation,'.txt') % Custom Lattice
                             [nodes,struts] = readLattice(UnitCell.equation);
                             UnitCell.u.nodes = nodes;
                             UnitCell.u.struts = struts;
-                        else
+                        else % Custom Function @(x,y,z) 
                             UnitCell.u = str2func(UnitCell.equation);
                         end
                     else
