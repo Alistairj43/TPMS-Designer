@@ -140,7 +140,7 @@ classdef v3Field
                     % Initialise the Field for the TPMS using equation u.
                     switch data.type
                         case "surface"
-                            F.property.U = (data.u(Xt,Yt,Zt)-F.property.V1+F.property.V2).*(data.u(Xt,Yt,Zt)+F.property.V1+F.property.V2);
+                            F.property.U = (data.u(Xt,Yt,Zt)+F.property.V1).*(data.u(Xt,Yt,Zt)+F.property.V2);
                         case "double"
                             F.property.U = (data.u(Xt,Yt,Zt)+F.property.V1).*(data.u(Xt,Yt,Zt)+F.property.V2);
                         case "single"
