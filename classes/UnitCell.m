@@ -10,7 +10,6 @@ classdef UnitCell
     properties
         type % Type of Cell equation 
         equation % - Equation or path to file describing
-        eqn % Equation showing parameters
         u % Data/Equation describing features
         v1 % Geometry Parameter 1
         v2 % Geometry Parameter 2
@@ -69,36 +68,37 @@ classdef UnitCell
             [classPath, ~, ~] = fileparts(mfilename('fullpath')); % Path to current file
             dataPath = fullfile(classPath,'..','data'); % Path to data
 
-            A = [];
+            p = [1 0]; % p is a polynomial fit for isovale as a function of volume fraction
             switch UnitCell.equation
                 case "Diamond"
                     UnitCell.u = @(x,y,z) ((sin(2*pi*x).*sin(2*pi*y).*sin(2*pi*z)+...
                         sin(2*pi*x).*cos(2*pi*y).*cos(2*pi*z)+...
                         cos(2*pi*x).*sin(2*pi*y).*cos(2*pi*z)+...
                         cos(2*pi*x).*cos(2*pi*y).*sin(2*pi*z)));
-                    A = 1/sqrt(2)*0.5844;
+                    p = [-15.38 38.56 -35.09 13.99 -4.702 1.315];
                 case "Gyroid"
                     UnitCell.u = @(x,y,z) (cos(2*pi*x).*sin(2*pi*y)+ ...
                         cos(2*pi*y).*sin(2*pi*z)+cos(2*pi*z).*sin(2*pi*x));
-                    A = 2/3*0.4964;
+                    p = [-1.298 3.260 -2.198 0.02743 -2.73 1.47];
                 case "Primitive"
                     UnitCell.u = @(x,y,z) (cos(2*pi*x)+cos(2*pi*y)+cos(2*pi*z));
-                    A = 1/3*0.8491;
+                    p = [-61.24 153.6 -146.2 65.4 -17.13 2.806];
                 case "IWP"
                     UnitCell.u = @(x,y,z) 2*(cos(2*pi*x).*cos(2*pi*y)+cos(2*pi*y).*cos(2*pi*z)+...
                         cos(2*pi*z).*cos(2*pi*x))...
                         -(cos(2*x)+ cos(2*y)+ cos(2*z));
-                    A = 40.82;
+                    p = [-91.5 195.6 -153.6 50.62 -9.08 4.715];
                 case "Neovius"
                     UnitCell.u = @(x,y,z) (3*(cos(2*pi*x)+cos(2*pi*y)+cos(2*pi*z))+4*cos(2*pi*x).*cos(2*pi*y).*cos(2*pi*z));
-                    A = 1/13;
+                    p = [-370.2 925.3 897.7 421.6 -102.1 11.59];
                 case "FRD"
                     UnitCell.u = @(x,y,z) 4*cos(2*pi*x).*cos(2*pi*y).*cos(2*pi*z)-(cos(2*x).*cos(2*y)...
                         +cos(2*y).*cos(2*z)+cos(2*z).*cos(2*x));
-                    A = 40.82;
+                    p = [-93.97 230.6 -222.1 104.6 -26.95 5.805];
                 case "Lidinoid"
                     UnitCell.u = @(x,y,z) 0.5*(sin(4*pi*x).*cos(2*pi*y).*sin(2*pi*z)+sin(4*pi*y).*cos(2*pi*z).*sin(2*pi*x)...
                         +sin(4*pi*z).*cos(2*pi*x).*sin(2*pi*y)-cos(4*pi*x).*cos(4*pi*y)-cos(4*pi*y).*cos(4*pi*z)-cos(4*pi*z).*cos(4*pi*x))+0.15;
+                    p = [-12.98 41.77 51.33 29.07 -8.839 1.217];
                 case "Sinusoidal"
                     UnitCell.u = @(x,y,z) sin(2*pi*x)+...
                         sin(2*pi*y)-(z-pi);
@@ -142,13 +142,13 @@ classdef UnitCell
             end
 
             
-            if ~isempty(A)
-                switch UnitCell.type
-                    case "network"
-                        UnitCell.v1 = -(UnitCell.v1-0.5)./A;
-                    case "surface"
-                        UnitCell.v1 = (UnitCell.v1)./(2*A);
-                end
+            switch UnitCell.type
+                case "network"
+                    UnitCell.v1 = polyval(p,UnitCell.v1);
+                case "surface"
+                    temp = polyval(p,0.5-UnitCell.v2-UnitCell.v1/2);
+                    UnitCell.v2 = polyval(p,0.5-UnitCell.v2+UnitCell.v1/2);
+                    UnitCell.v1 = temp;
             end
         end
         
@@ -164,7 +164,7 @@ classdef UnitCell
             out.v1 = UnitCell.v1;
             out.v2 = UnitCell.v2;
             out.voxelSize = UnitCell.voxelSize;
-            if verLessThan('matlab', '9.13') % Compatability
+            if isMATLABReleaseOlderThan('R2022b') % Compatability
                 out.Lx = UnitCell.tform.T(1,1);
                 out.Ly = UnitCell.tform.T(1,2);
                 out.Lz = UnitCell.tform.T(1,3);
@@ -263,7 +263,6 @@ classdef UnitCell
             tic; 
 
             
-
             % Compute SDF and properties
             if isempty(UnitCell.F)
                 if strcmp(UnitCell.type,'lattice') %Handle Lattices
@@ -271,18 +270,6 @@ classdef UnitCell
                     UnitCell.u.rnode = UnitCell.v2;
                     UnitCell.F = v3Field('lattice',UnitCell.u,UnitCell.voxelSize,UnitCell.B,UnitCell.tform);
                 else
-
-%                     % Initialise the Field for the TPMS using equation u.
-%                     switch UnitCell.type
-%                         case "surface"
-%                             temp = @(x,y,z)(UnitCell.u(x,y,z)-UnitCell.v1+UnitCell.v2).*(UnitCell.u(x,y,z)+UnitCell.v1+UnitCell.v2);
-%                         case "double"
-%                             temp = @(x,y,z)(UnitCell.u(x,y,z)+UnitCell.v1).*(UnitCell.u(x,y,z)+UnitCell.v2);
-%                         case "single"
-%                             temp = @(x,y,z)UnitCell.u(x,y,z)+UnitCell.v1;
-%                         otherwise
-%                             temp = @(x,y,z)UnitCell.u(x,y,z)+UnitCell.v1;
-%                     end
                     UnitCell.F = v3Field("TPMS",UnitCell,UnitCell.voxelSize,UnitCell.B,UnitCell.tform);  % Move to discretized space centred at origin
                 end
             end
