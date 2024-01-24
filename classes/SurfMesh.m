@@ -227,7 +227,7 @@ classdef SurfMesh
 
 
             if caps&&~isempty(FV.facesc)
-                opts.FaceAlpha = caps; opts.LineStyle = 'none';
+                opts.FaceAlpha = caps; opts.LineStyle = 'none'; hold(ax,'on');
                 h(2) = patch(ax,'Faces',FV.facesc,'Vertices',FV.verticesc,opts,'FaceColor','black'); hold(ax,'off');
             end
         end
