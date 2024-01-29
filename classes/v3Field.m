@@ -156,9 +156,10 @@ classdef v3Field
                             F.property.U = max(F.property.U,temp);
                         case "FV"
                             temp.faces = region.FV.faces;
-                            res = round((F.upper-F.lower)/voxelSize);
+                            res = size(F.property.U);
+                            %res = round((F.upper-F.lower)/voxelSize);
                             temp.vertices = 1+(1-1./res).*((region.FV.vertices-F.lower)./F.voxelSize);
-                            surface = 1.0*voxelateMesh(temp,[res(2),res(1),res(3)],'wrap',true);
+                            surface = 1.0*voxelateMesh(temp,[res(1),res(2),res(3)],'wrap',true);
                             solid = imfill(1.0*surface);
                             tempU = double(1.0.*(bwdist(solid)-bwdist(1.0-solid)));
                             F.property.U = max(F.property.U,tempU);
