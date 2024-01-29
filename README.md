@@ -4,8 +4,7 @@ An open-source Matlab toolbox for generation, analysis and visualisation of TPMS
 
 ## Install Instructions
 
-To install the complete toolbox in Matlab, download 
-the latest release of TPMS Designer Release and include files in your path within matlab.
+- To install the complete toolbox in Matlab, download the latest release of TPMS Designer Release and include files in your path within matlab.
 
 - To install just the GUI application, download and run
 TPMS-Designer/app/TPMS Designer GUI.mlappinstall 
