@@ -270,6 +270,27 @@ classdef SurfMesh
             F = v3Field("FV",FV,voxelSize,region); %F = v3Field(method,data,res,region,tform)
             F.name = FV.name;
         end
+
+        function FEModelOut = computeFEMesh(FV, meshSize, meshGrowthRate, meshOrder)
+            % Funtion to convert an FV structure to a Field
+            % inputs:
+            %   meshSize - desired size of mesh elements
+            %   meshGrowthRate - grwoth rate
+            %   meshOrder - order of elements ('linear or quadratic')
+            % outputs:
+            %   FEMESH - FEMesh object from the pde toolbox
+            arguments
+                FV;
+                meshSize = 0.1;
+                meshGrowthRate=1.1;
+                meshOrder='quadratic';
+            end
+
+            FV.exportSTL("tempMesh.stl"); % Export temporarily
+            FEModelOut = createpde(1); % Create model
+            importGeometry(FEModelOut,"tempMesh.stl"); % Assign geometry
+            generateMesh(FEModelOut); % Generate the mesh
+        end
     end
 end
 

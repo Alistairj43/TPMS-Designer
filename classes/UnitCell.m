@@ -18,6 +18,7 @@ classdef UnitCell
         FV % SurfMesh Object
         F % V3Field Object
         M % Metrics Object
+        FEModel % FEModel Object
         B % Object describing the bulk object
     end
     
@@ -240,7 +241,7 @@ classdef UnitCell
         end
         
         
-        function UnitCell = compute(UnitCell,computeCurvature,computeMechanical,computeMesh)
+        function UnitCell = compute(UnitCell,computeCurvature,computeMechanical,computeMesh, computeFEMesh)
             %Function to generate the unit cell and compute various
             % properties Inputs:
             %   Unit Cell - (UnitCell) Self-referenced object
@@ -257,11 +258,11 @@ classdef UnitCell
                 computeCurvature = 'none';
                 computeMechanical = 0;
                 computeMesh = 1;
+                computeFEMesh = 0;
             end
 
             % Start the timer
             tic; 
-
             
             % Compute SDF and properties
             if isempty(UnitCell.F)
@@ -285,6 +286,10 @@ classdef UnitCell
                 temp = diag(UnitCell.tform.A)';
                 UnitCell.M.relativeArea = UnitCell.M.surfaceArea./...
                     (2*(temp(1)*temp(2)+temp(2)*temp(3)+temp(3)*temp(1)));
+            end
+
+            if computeFEMesh
+                UnitCell.FEModel = UnitCell.FV.computeFEMesh();
             end
 
             % Run Homogenisation
