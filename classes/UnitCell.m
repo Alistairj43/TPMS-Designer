@@ -87,7 +87,7 @@ classdef UnitCell
                 case "IWP"
                     UnitCell.u = @(x,y,z) 2*(cos(2*pi*x).*cos(2*pi*y)+cos(2*pi*y).*cos(2*pi*z)+...
                         cos(2*pi*z).*cos(2*pi*x))...
-                        -(cos(2*x)+ cos(2*y)+ cos(2*z));
+                        -(cos(2*pi*x)+ cos(2*pi*y)+ cos(2*pi*z));
                     p = [-91.5 195.6 -153.6 50.62 -9.08 4.715];
                 case "Neovius"
                     UnitCell.u = @(x,y,z) (3*(cos(2*pi*x)+cos(2*pi*y)+cos(2*pi*z))+4*cos(2*pi*x).*cos(2*pi*y).*cos(2*pi*z));
