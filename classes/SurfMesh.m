@@ -97,7 +97,9 @@ classdef SurfMesh
 
                 % Calculate normals
                 FaceNormals=cross(V(F(:,3),:)-V(F(:,2),:),V(F(:,1),:)-V(F(:,3),:));
-                FaceNormals=normr(FaceNormals); % Normalise to unit normals
+                rowNorms = vecnorm(FaceNormals, 2, 2);
+                rowNorms(rowNorms == 0) = 1;   % avoid divide-by-zero
+                FaceNormals = FaceNormals ./ rowNorms;
                 fp.Zheight = mean(z(F),2);
                 fp.Nx = FaceNormals(:,1); fp.Ny = FaceNormals(:,2); fp.Nz = FaceNormals(:,3);
                 [qp.UnitNormal,Avertex,Acorner,up,vp]=computeVertexNormals(FV,FaceNormals);

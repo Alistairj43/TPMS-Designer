@@ -49,13 +49,13 @@ Avertex=zeros(size(FV.vertices,1),1);
 VertexNormals=zeros([size(FV.vertices,1) 3]);
 up=zeros([size(FV.vertices,1) 3]);
 vp=zeros([size(FV.vertices,1) 3]);
+A = size(N)
 for i=1:size(FV.faces,1)
     %Calculate weights according to N.Max [1999]
-    
+    i
     wfv1=Af(i)/(de1(i)^2*de2(i)^2);
     wfv2=Af(i)/(de0(i)^2*de2(i)^2);
     wfv3=Af(i)/(de1(i)^2*de0(i)^2);
-    
     VertexNormals(FV.faces(i,1),:)=VertexNormals(FV.faces(i,1),:)+wfv1*N(i,:);
     VertexNormals(FV.faces(i,2),:)=VertexNormals(FV.faces(i,2),:)+wfv2*N(i,:);
     VertexNormals(FV.faces(i,3),:)=VertexNormals(FV.faces(i,3),:)+wfv3*N(i,:);
